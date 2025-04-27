@@ -1,0 +1,59 @@
+{
+  "tips": [
+    {
+      "category": "Safety",
+      "icon": "shield",
+      "items": [
+        "Always keep digital copies of important documents",
+        "Share your itinerary with family or friends",
+        "Research local emergency numbers before traveling",
+        "Keep valuables in hotel safes when possible",
+        "Be cautious of public Wi-Fi networks for sensitive transactions"
+      ]
+    },
+    {
+      "category": "Money-Saving",
+      "icon": "savings",
+      "items": [
+        "Book flights 2-3 months in advance for best rates",
+        "Travel during shoulder seasons for better deals",
+        "Use local transportation instead of taxis when safe",
+        "Eat where locals eat for authentic and affordable food",
+        "Consider homestays or hostels instead of hotels"
+      ]
+    },
+    {
+      "category": "Local Eats",
+      "icon": "restaurant",
+      "items": [
+        "Research local specialties before your trip",
+        "Look for restaurants filled with locals, not tourists",
+        "Try street food from vendors with long lines",
+        "Ask your accommodation host for recommendations",
+        "Take a local food tour early in your trip"
+      ]
+    },
+    {
+      "category": "Packing",
+      "icon": "luggage",
+      "items": [
+        "Roll clothes instead of folding to save space",
+        "Pack versatile clothing items that can be layered",
+        "Bring a portable charger for your devices",
+        "Include a basic first-aid kit with essential medications",
+        "Use packing cubes to organize your suitcase"
+      ]
+    },
+    {
+      "category": "Transportation",
+      "icon": "directions_bus",
+      "items": [
+        "Download offline maps before your trip",
+        "Research public transportation options in advance",
+        "Consider buying transportation passes for multiple days",
+        "Use ride-sharing apps with good reviews in the area",
+        "Learn basic phrases for getting directions in the local language"
+      ]
+    }
+  ]
+}

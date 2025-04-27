@@ -1,0 +1,129 @@
+{
+  "destinations": [
+    {
+      "id": "1",
+      "name": "Goa",
+      "region": "West India",
+      "country": "India",
+      "description": "Goa is a state on the southwestern coast of India within the region known as the Konkan. It is bounded by the state of Maharashtra to the north and by Karnataka to the east and south, with the Arabian Sea forming its western coast.",
+      "image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
+      "rating": 4.5,
+      "price": 15000,
+      "attractions": [
+        "Calangute Beach",
+        "Baga Beach",
+        "Fort Aguada",
+        "Dudhsagar Falls",
+        "Basilica of Bom Jesus"
+      ],
+      "activities": [
+        "Beach Activities",
+        "Water Sports",
+        "Nightlife",
+        "Cultural Tours",
+        "Food Exploration"
+      ],
+      "tags": ["Beach", "Relaxation", "Nightlife", "Culture", "Food"]
+    },
+    {
+      "id": "2",
+      "name": "Manali",
+      "region": "North India",
+      "country": "India",
+      "description": "Manali is a high-altitude Himalayan resort town in India's northern Himachal Pradesh state. It has a reputation as a backpacking center and honeymoon destination.",
+      "image": "https://images.unsplash.com/photo-1558436378-fda9dc0b2917?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
+      "rating": 4.7,
+      "price": 20000,
+      "attractions": [
+        "Rohtang Pass",
+        "Solang Valley",
+        "Hadimba Temple",
+        "Manu Temple",
+        "Old Manali"
+      ],
+      "activities": [
+        "Trekking",
+        "Skiing",
+        "Paragliding",
+        "River Rafting",
+        "Camping"
+      ],
+      "tags": ["Mountains", "Adventure", "Nature", "Trekking", "Snow"]
+    },
+    {
+      "id": "3",
+      "name": "Jaipur",
+      "region": "North India",
+      "country": "India",
+      "description": "Jaipur is the capital of India's Rajasthan state. It evokes the royal family that once ruled the region and that, in 1727, founded what is now called the Old City, or 'Pink City' for its trademark building color.",
+      "image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
+      "rating": 4.6,
+      "price": 18000,
+      "attractions": [
+        "Hawa Mahal",
+        "Amber Fort",
+        "City Palace",
+        "Jantar Mantar",
+        "Jal Mahal"
+      ],
+      "activities": [
+        "Heritage Tours",
+        "Shopping",
+        "Food Tours",
+        "Elephant Rides",
+        "Cultural Shows"
+      ],
+      "tags": ["Culture", "Heritage", "History", "Shopping", "Food"]
+    },
+    {
+      "id": "4",
+      "name": "Kerala",
+      "region": "South India",
+      "country": "India",
+      "description": "Kerala, a state on India's tropical Malabar Coast, has nearly 600km of Arabian Sea shoreline. It's known for its palm-lined beaches and backwaters, a network of canals.",
+      "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
+      "rating": 4.8,
+      "price": 25000,
+      "attractions": [
+        "Alleppey Backwaters",
+        "Munnar",
+        "Wayanad",
+        "Kovalam Beach",
+        "Periyar Wildlife Sanctuary"
+      ],
+      "activities": [
+        "Houseboat Stay",
+        "Ayurvedic Treatments",
+        "Wildlife Safari",
+        "Tea Plantation Tours",
+        "Beach Activities"
+      ],
+      "tags": ["Backwaters", "Nature", "Relaxation", "Ayurveda", "Wildlife"]
+    },
+    {
+      "id": "5",
+      "name": "Darjeeling",
+      "region": "East India",
+      "country": "India",
+      "description": "Darjeeling is a town in India's West Bengal state, in the Himalayan foothills. Once a summer resort for the British Raj elite, it remains the terminus of the narrow-gauge Darjeeling Himalayan Railway, or 'Toy Train,' completed in 1881.",
+      "image": "https://images.unsplash.com/photo-1544181093-c712fb401bdc?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80",
+      "rating": 4.5,
+      "price": 22000,
+      "attractions": [
+        "Tiger Hill",
+        "Batasia Loop",
+        "Darjeeling Himalayan Railway",
+        "Happy Valley Tea Estate",
+        "Padmaja Naidu Himalayan Zoological Park"
+      ],
+      "activities": [
+        "Tea Garden Tours",
+        "Toy Train Ride",
+        "Trekking",
+        "Sunrise Viewing",
+        "Shopping"
+      ],
+      "tags": ["Mountains", "Tea", "Nature", "Scenic", "Colonial"]
+    }
+  ]
+}
