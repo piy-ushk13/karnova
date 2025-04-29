@@ -1,13 +1,21 @@
 // Augment: TripOnBuddy Website → Flutter App
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTheme {
   // Material 3 colors as specified in new theme palette
   static const Color primaryColor = Color(0xFF4E79FF); // Light Blue
+  static const Color primaryColorLight = Color(
+    0xFF81A9FF,
+  ); // Lighter shade of primary
+  static const Color primaryColorDark = Color(
+    0xFF3A5CBF,
+  ); // Darker shade of primary
   static const Color secondaryColor = Color(0xFFFF5A5F); // Accent/Action color
-  static const Color scaffoldBackgroundColor = Color(0xFFF0F6F4);
+  static const Color scaffoldBackgroundColor = Color(
+    0xFFF8FAFC,
+  ); // Lighter background for better contrast
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color dividerColor = Color(0xFFE5E7EB);
 
@@ -24,89 +32,121 @@ class AppTheme {
   static double get largeScreenBreakpoint => 1000.w;
 
   // Material 3 color scheme with updated palette
-  static ColorScheme lightColorScheme = ColorScheme(
+  static ColorScheme lightColorScheme = ColorScheme.light(
     primary: primaryColor,
     secondary: secondaryColor,
     surface: surfaceColor,
-    surfaceContainerHighest: scaffoldBackgroundColor,
     error: Colors.red,
     onPrimary: Colors.white,
     onSecondary: Colors.white,
     onSurface: Colors.black,
     onError: Colors.white,
-    brightness: Brightness.light,
+    surfaceTint: primaryColor,
+    outline: dividerColor,
+    // Use withAlpha instead of withOpacity
+    outlineVariant: dividerColor.withAlpha(128),
+    shadow: Colors.black,
+    scrim: Colors.black.withAlpha(102),
+    inverseSurface: Colors.black,
+    onInverseSurface: Colors.white,
+    inversePrimary: Colors.white,
+    surfaceContainerHighest: scaffoldBackgroundColor,
+    onSurfaceVariant: Colors.black87,
+    primaryContainer: primaryColor.withAlpha(204),
+    onPrimaryContainer: Colors.white,
+    secondaryContainer: secondaryColor.withAlpha(204),
+    onSecondaryContainer: Colors.white,
+    tertiary: Color(0xFF4CAF50),
+    onTertiary: Colors.white,
+    tertiaryContainer: Color(0xFF4CAF50).withAlpha(204),
+    onTertiaryContainer: Colors.white,
+    errorContainer: Colors.red.shade200,
+    onErrorContainer: Colors.white,
   );
 
-  // Text themes using Roboto for body and Playfair Display for headlines
-  // Updated according to new theme specifications with black text for visibility
+  // Text themes using system fonts for reliability
+  // Updated to use system fonts to ensure text always appears
   static TextTheme _buildTextTheme(TextTheme base) {
     return base.copyWith(
-      // H1/Hero: Playfair Display, bold, 32-40px
-      displayLarge: GoogleFonts.playfairDisplay(
+      // H1/Hero: Serif font for headings, bold, 32-40px
+      displayLarge: TextStyle(
+        fontFamily: 'serif',
         fontSize: 40.sp,
         fontWeight: FontWeight.bold,
         color: Colors.black,
         letterSpacing: -0.5,
       ),
-      displayMedium: GoogleFonts.playfairDisplay(
+      displayMedium: TextStyle(
+        fontFamily: 'serif',
         fontSize: 36.sp,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
-      displaySmall: GoogleFonts.playfairDisplay(
+      displaySmall: TextStyle(
+        fontFamily: 'serif',
         fontSize: 32.sp,
         fontWeight: FontWeight.bold,
         color: Colors.black,
       ),
-      headlineLarge: GoogleFonts.playfairDisplay(
+      headlineLarge: TextStyle(
+        fontFamily: 'serif',
         fontSize: 28.sp,
         fontWeight: FontWeight.w600,
         color: Colors.black,
       ),
-      headlineMedium: GoogleFonts.playfairDisplay(
+      headlineMedium: TextStyle(
+        fontFamily: 'serif',
         fontSize: 24.sp,
         fontWeight: FontWeight.w600,
         color: Colors.black,
       ),
-      // Section titles: Playfair Display, 20-24px
-      headlineSmall: GoogleFonts.playfairDisplay(
+      // Section titles: Serif font, 20-24px
+      headlineSmall: TextStyle(
+        fontFamily: 'serif',
         fontSize: 20.sp,
         fontWeight: FontWeight.w600,
         color: Colors.black,
       ),
-      titleLarge: GoogleFonts.roboto(
+      titleLarge: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 18.sp,
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
-      titleMedium: GoogleFonts.roboto(
+      titleMedium: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 16.sp,
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
-      titleSmall: GoogleFonts.roboto(
+      titleSmall: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 14.sp,
         fontWeight: FontWeight.w500,
         color: Colors.black,
       ),
-      // bodyText1: Roboto, 16px
-      bodyLarge: GoogleFonts.roboto(
+      // bodyText1: Sans-serif, 16px
+      bodyLarge: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 16.sp,
         fontWeight: FontWeight.normal,
         color: Colors.black,
       ),
-      bodyMedium: GoogleFonts.roboto(
+      bodyMedium: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 14.sp,
         fontWeight: FontWeight.normal,
         color: Colors.black,
       ),
-      // caption: Roboto, 12px
-      bodySmall: GoogleFonts.roboto(
+      // caption: Sans-serif, 12px
+      bodySmall: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 12.sp,
         fontWeight: FontWeight.normal,
         color: Colors.black87,
       ),
-      labelLarge: GoogleFonts.roboto(
+      labelLarge: TextStyle(
+        fontFamily: 'sans-serif',
         fontSize: 14.sp,
         fontWeight: FontWeight.w500,
         color: Colors.black,
@@ -125,6 +165,12 @@ class AppTheme {
     primaryColorLight: Color(0xFF81A9FF), // Lighter shade of primary
     primaryColorDark: Color(0xFF3A5CBF), // Darker shade of primary
     canvasColor: surfaceColor,
+    // Ensure text is always visible
+    textSelectionTheme: TextSelectionThemeData(
+      cursorColor: primaryColor,
+      selectionColor: primaryColor.withAlpha(77),
+      selectionHandleColor: primaryColor,
+    ),
     appBarTheme: AppBarTheme(
       backgroundColor: surfaceColor,
       foregroundColor: Colors.black,
@@ -132,11 +178,15 @@ class AppTheme {
         color: Colors.black,
         fontSize: 20.sp,
         fontWeight: FontWeight.w600,
-        fontFamily: GoogleFonts.playfairDisplay().fontFamily,
+        fontFamily: 'serif',
       ),
       iconTheme: IconThemeData(color: Colors.black),
       actionsIconTheme: IconThemeData(color: Colors.black),
       elevation: 0,
+      systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
     ),
     // CardTheme: background #FFFFFF, elevation 4, borderRadius 12px
     cardTheme: CardTheme(
@@ -188,6 +238,13 @@ class AppTheme {
       filled: true,
       fillColor: surfaceColor,
       prefixIconColor: textSecondaryColor,
+      // Ensure text is visible in input fields
+      hintStyle: TextStyle(color: Colors.grey[600]),
+      labelStyle: TextStyle(color: Colors.black87),
+      floatingLabelStyle: TextStyle(color: primaryColor),
+      helperStyle: TextStyle(color: Colors.black87),
+      errorStyle: TextStyle(color: Colors.red),
+      // Border styles
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(standardBorderRadius),
         borderSide: BorderSide(color: dividerColor),
@@ -200,6 +257,14 @@ class AppTheme {
         borderRadius: BorderRadius.circular(standardBorderRadius),
         borderSide: BorderSide(color: primaryColor, width: 2),
       ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(standardBorderRadius),
+        borderSide: BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(standardBorderRadius),
+        borderSide: BorderSide(color: Colors.red, width: 2),
+      ),
       contentPadding: EdgeInsets.symmetric(
         horizontal: standardPadding,
         vertical: standardPadding,
@@ -210,8 +275,17 @@ class AppTheme {
       backgroundColor: surfaceColor,
       selectedColor: secondaryColor,
       disabledColor: surfaceColor,
-      labelStyle: TextStyle(color: textPrimaryColor),
-      secondaryLabelStyle: TextStyle(color: Colors.white),
+      // Ensure text is visible in chips
+      labelStyle: TextStyle(
+        color: textPrimaryColor,
+        fontWeight: FontWeight.normal,
+        fontSize: 14.sp,
+      ),
+      secondaryLabelStyle: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 14.sp,
+      ),
       side: BorderSide(color: dividerColor),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(standardBorderRadius),
@@ -224,12 +298,20 @@ class AppTheme {
       elevation: 8,
       selectedItemColor: secondaryColor,
       unselectedItemColor: Colors.black,
+      // Ensure text is visible in bottom navigation bar
       selectedLabelStyle: TextStyle(
         color: secondaryColor,
         fontSize: 12.sp,
         fontWeight: FontWeight.w500,
       ),
-      unselectedLabelStyle: TextStyle(color: Colors.black, fontSize: 12.sp),
+      unselectedLabelStyle: TextStyle(
+        color: Colors.black,
+        fontSize: 12.sp,
+        fontWeight: FontWeight.normal,
+      ),
+      // Make sure icons are visible
+      selectedIconTheme: IconThemeData(color: secondaryColor, size: 24.sp),
+      unselectedIconTheme: IconThemeData(color: Colors.black, size: 22.sp),
       type: BottomNavigationBarType.fixed,
       landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
       showSelectedLabels: true,

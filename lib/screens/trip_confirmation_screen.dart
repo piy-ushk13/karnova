@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:karnova/models/area_of_interest.dart';
 import 'package:karnova/models/transport_mode.dart';
 import 'package:karnova/providers/trip_providers.dart';
 import 'package:karnova/utils/theme.dart';

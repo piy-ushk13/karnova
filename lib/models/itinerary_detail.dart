@@ -45,18 +45,22 @@ class ItineraryDetail {
       budget: json['budget'],
       startLocation: json['startLocation'],
       highlights: List<String>.from(json['highlights']),
-      weatherForecast: (json['weatherForecast'] as List)
-          .map((e) => WeatherForecast.fromJson(e))
-          .toList(),
-      dailyItineraries: (json['dailyItineraries'] as List)
-          .map((e) => DailyItinerary.fromJson(e))
-          .toList(),
-      accommodations: (json['accommodations'] as List)
-          .map((e) => Accommodation.fromJson(e))
-          .toList(),
-      transportations: (json['transportations'] as List)
-          .map((e) => Transportation.fromJson(e))
-          .toList(),
+      weatherForecast:
+          (json['weatherForecast'] as List)
+              .map((e) => WeatherForecast.fromJson(e))
+              .toList(),
+      dailyItineraries:
+          (json['dailyItineraries'] as List)
+              .map((e) => DailyItinerary.fromJson(e))
+              .toList(),
+      accommodations:
+          (json['accommodations'] as List)
+              .map((e) => Accommodation.fromJson(e))
+              .toList(),
+      transportations:
+          (json['transportations'] as List)
+              .map((e) => Transportation.fromJson(e))
+              .toList(),
       travelTips: List<String>.from(json['travelTips']),
     );
   }
@@ -89,7 +93,7 @@ class ItineraryDetail {
   String get dateRange {
     final startMonth = _getMonthName(startDate.month);
     final endMonth = _getMonthName(endDate.month);
-    
+
     if (startDate.month == endDate.month && startDate.year == endDate.year) {
       return '${startDate.day} – ${endDate.day} $startMonth, ${startDate.year}';
     } else if (startDate.year == endDate.year) {
@@ -99,11 +103,45 @@ class ItineraryDetail {
     }
   }
 
+  // Get total budget (sum of all activities, accommodations, and transportations)
+  int get totalBudget {
+    int total = budget; // Base budget
+
+    // Add activity costs
+    for (var day in dailyItineraries) {
+      for (var activity in day.activities) {
+        total += activity.cost;
+      }
+    }
+
+    // Add accommodation costs
+    for (var accommodation in accommodations) {
+      total += accommodation.cost;
+    }
+
+    // Add transportation costs
+    for (var transportation in transportations) {
+      total += transportation.cost;
+    }
+
+    return total;
+  }
+
   // Helper method to get month name
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return months[month - 1];
   }
@@ -132,7 +170,8 @@ class ItineraryDetail {
         DailyItinerary(
           day: 1,
           title: 'Arrival in Mumbai',
-          description: 'Arrive at Chhatrapati Shivaji International Airport and check-in to your hotel. Relax and prepare for your Mumbai adventure.',
+          description:
+              'Arrive at Chhatrapati Shivaji International Airport and check-in to your hotel. Relax and prepare for your Mumbai adventure.',
           activities: [
             Activity(
               time: '14:00',
@@ -157,7 +196,8 @@ class ItineraryDetail {
         DailyItinerary(
           day: 2,
           title: 'South Mumbai Exploration',
-          description: 'Explore the historic and cultural landmarks of South Mumbai, including the iconic Gateway of India and the magnificent CST Railway Station.',
+          description:
+              'Explore the historic and cultural landmarks of South Mumbai, including the iconic Gateway of India and the magnificent CST Railway Station.',
           activities: [
             Activity(
               time: '09:00',
@@ -188,7 +228,8 @@ class ItineraryDetail {
         DailyItinerary(
           day: 3,
           title: 'Cultural Mumbai',
-          description: 'Immerse yourself in the cultural side of Mumbai with visits to temples, museums, and local markets.',
+          description:
+              'Immerse yourself in the cultural side of Mumbai with visits to temples, museums, and local markets.',
           activities: [
             Activity(
               time: '08:00',
@@ -213,7 +254,8 @@ class ItineraryDetail {
         DailyItinerary(
           day: 4,
           title: 'Mumbai Beaches',
-          description: 'Relax and enjoy the beautiful beaches of Mumbai, from the popular Juhu Beach to the serene Aksa Beach.',
+          description:
+              'Relax and enjoy the beautiful beaches of Mumbai, from the popular Juhu Beach to the serene Aksa Beach.',
           activities: [
             Activity(
               time: '10:00',
@@ -238,7 +280,8 @@ class ItineraryDetail {
         DailyItinerary(
           day: 5,
           title: 'Departure',
-          description: 'Wrap up your Mumbai adventure with some last-minute shopping and prepare for departure.',
+          description:
+              'Wrap up your Mumbai adventure with some last-minute shopping and prepare for departure.',
           activities: [
             Activity(
               time: '10:00',
@@ -321,9 +364,10 @@ class DailyItinerary {
       day: json['day'],
       title: json['title'],
       description: json['description'],
-      activities: (json['activities'] as List)
-          .map((e) => Activity.fromJson(e))
-          .toList(),
+      activities:
+          (json['activities'] as List)
+              .map((e) => Activity.fromJson(e))
+              .toList(),
     );
   }
 

@@ -52,6 +52,9 @@ dependencies:
   # For responsive design
   flutter_screenutil: ^5.9.0
 
+  # For generating unique IDs
+  uuid: ^4.3.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

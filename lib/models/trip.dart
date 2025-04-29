@@ -1,13 +1,18 @@
 // Augment: TripOnBuddy Website → Flutter App
+import 'package:flutter/material.dart';
 import 'package:karnova/models/destination.dart';
 
 enum TravelPreference {
   adventure,
   culture,
   relaxation,
-  classical,
+  nature,
   shopping,
   food,
+  family,
+  romantic,
+  budget,
+  luxury,
 }
 
 extension TravelPreferenceExtension on TravelPreference {
@@ -19,29 +24,45 @@ extension TravelPreferenceExtension on TravelPreference {
         return 'Culture';
       case TravelPreference.relaxation:
         return 'Relaxation';
-      case TravelPreference.classical:
-        return 'Classical';
+      case TravelPreference.nature:
+        return 'Nature';
       case TravelPreference.shopping:
         return 'Shopping';
       case TravelPreference.food:
         return 'Food';
+      case TravelPreference.family:
+        return 'Family';
+      case TravelPreference.romantic:
+        return 'Romantic';
+      case TravelPreference.budget:
+        return 'Budget';
+      case TravelPreference.luxury:
+        return 'Luxury';
     }
   }
 
-  String get icon {
+  IconData get icon {
     switch (this) {
       case TravelPreference.adventure:
-        return 'hiking';
+        return Icons.hiking;
       case TravelPreference.culture:
-        return 'account_balance';
+        return Icons.account_balance;
       case TravelPreference.relaxation:
-        return 'beach_access';
-      case TravelPreference.classical:
-        return 'music_note';
+        return Icons.beach_access;
+      case TravelPreference.nature:
+        return Icons.landscape;
       case TravelPreference.shopping:
-        return 'shopping_bag';
+        return Icons.shopping_bag;
       case TravelPreference.food:
-        return 'restaurant';
+        return Icons.restaurant;
+      case TravelPreference.family:
+        return Icons.family_restroom;
+      case TravelPreference.romantic:
+        return Icons.favorite;
+      case TravelPreference.budget:
+        return Icons.savings;
+      case TravelPreference.luxury:
+        return Icons.diamond;
     }
   }
 }
@@ -81,9 +102,10 @@ class Trip {
       preference: TravelPreference.values.firstWhere(
         (e) => e.name.toLowerCase() == json['preference'].toLowerCase(),
       ),
-      destinationDetails: json['destinationDetails'] != null
-          ? Destination.fromJson(json['destinationDetails'])
-          : null,
+      destinationDetails:
+          json['destinationDetails'] != null
+              ? Destination.fromJson(json['destinationDetails'])
+              : null,
     );
   }
 

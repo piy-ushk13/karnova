@@ -7,7 +7,6 @@ import 'package:karnova/models/destination.dart';
 import 'package:karnova/services/api_service.dart';
 import 'package:karnova/widgets/animated_content.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
-import 'package:karnova/utils/theme.dart';
 
 // Provider for popular places
 final popularPlacesProvider = FutureProvider<List<Destination>>((ref) async {

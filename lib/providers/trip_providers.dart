@@ -2,7 +2,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:karnova/models/area_of_interest.dart';
 import 'package:karnova/models/transport_mode.dart';
-import 'package:karnova/models/trip.dart';
 
 // Provider for storing the current trip being planned
 final currentTripProvider = StateProvider<Map<String, dynamic>?>((ref) => null);

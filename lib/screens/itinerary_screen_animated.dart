@@ -5,15 +5,34 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:karnova/models/itinerary_detail.dart';
-import 'package:karnova/providers/trip_providers.dart';
 import 'package:karnova/utils/theme.dart';
 import 'package:karnova/widgets/animated_content.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
+import 'package:karnova/widgets/itinerary_map.dart';
 import 'package:karnova/widgets/tips_banner.dart';
 
-// Provider for Mumbai itinerary
-final mumbaiItineraryProvider = Provider<ItineraryDetail>((ref) {
-  return ItineraryDetail.getMumbaiItinerary();
+import 'package:karnova/repositories/trip_planning_repository.dart';
+
+// Provider for all itineraries
+final itinerariesProvider = Provider<List<ItineraryDetail>>((ref) {
+  // Get the generated itinerary if available
+  final generatedItinerary = ref.watch(generatedItineraryDetailProvider);
+
+  // Create a list with the generated itinerary (if available) and the mock itinerary
+  final itineraries = <ItineraryDetail>[];
+
+  // Add the generated itinerary if available
+  if (generatedItinerary != null) {
+    itineraries.add(generatedItinerary);
+  }
+
+  // If no itineraries are available, add a default mock itinerary
+  // This ensures we always have at least one itinerary to display
+  if (itineraries.isEmpty) {
+    itineraries.add(ItineraryDetail.getMumbaiItinerary());
+  }
+
+  return itineraries;
 });
 
 class ItineraryScreenAnimated extends ConsumerStatefulWidget {
@@ -25,37 +44,58 @@ class ItineraryScreenAnimated extends ConsumerStatefulWidget {
 }
 
 class _ItineraryScreenAnimatedState
-    extends ConsumerState<ItineraryScreenAnimated> {
+    extends ConsumerState<ItineraryScreenAnimated>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final itinerary = ref.watch(mumbaiItineraryProvider);
-    final isTripConfirmed = ref.watch(isTripConfirmedProvider);
-    final tripData = ref.watch(currentTripProvider);
+    final itineraries = ref.watch(itinerariesProvider);
 
-    // If trip is not confirmed and there's no trip data, redirect to home
-    if (!isTripConfirmed && tripData == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/');
-      });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    // If trip is not confirmed but there's trip data, redirect to confirmation
-    if (!isTripConfirmed && tripData != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.go('/trip-confirmation');
-      });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    // If trip is confirmed, allow access to itinerary
-
+    // We'll always show the itinerary screen, regardless of confirmation status
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Itinerary'),
+        title: Text(
+          'Your Itinerary',
+          style: GoogleFonts.playfairDisplay(
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
         actions: [
+          // Edit Trip Button
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Edit Trip',
+            onPressed: () {
+              if (_tabController.index == 0 && itineraries.isNotEmpty) {
+                _showEditTripDialog(context, itineraries[0]);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No trips to edit'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+          ),
+          // Share Button
           IconButton(
             icon: const Icon(Icons.share),
+            tooltip: 'Share Itinerary',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -65,387 +105,614 @@ class _ItineraryScreenAnimatedState
             },
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: AppTheme.primaryColor,
+          unselectedLabelColor: Colors.grey[600],
+          indicatorColor: AppTheme.primaryColor,
+          tabs: const [Tab(text: 'Upcoming Trips'), Tab(text: 'Past Trips')],
+        ),
       ),
       bottomNavigationBar: const CustomBottomNavbar(currentRoute: '/itinerary'),
       body: SafeArea(
-        child: AnimatedContent(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // Upcoming Trips Tab
+            itineraries.isEmpty
+                ? _buildEmptyTripsView(isUpcoming: true)
+                : _buildUpcomingTripsTab(itineraries[0]),
+
+            // Past Trips Tab
+            _buildPastTripsTab(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build upcoming trips tab
+  Widget _buildUpcomingTripsTab(ItineraryDetail itinerary) {
+    return AnimatedContent(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tips banner at the top
+            AnimatedContent(
+              delay: const Duration(milliseconds: 100),
+              child: const TipsBanner(
+                tip:
+                    'Consider visiting Fort Aguada early in the morning to avoid crowds and get the best photos!',
+              ),
+            ),
+
+            // Trip Overview Card
+            AnimatedContent(
+              delay: const Duration(milliseconds: 200),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.location_on,
+                              color: AppTheme.primaryColor,
+                              size: 24.sp,
+                            ),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                itinerary
+                                    .title, // Using title instead of destination
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                            // Edit Trip Button
+                            IconButton(
+                              icon: Icon(
+                                Icons.edit,
+                                color: AppTheme.primaryColor,
+                                size: 20.sp,
+                              ),
+                              onPressed: () {
+                                _showEditTripDialog(context, itinerary);
+                              },
+                              tooltip: 'Edit Trip',
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildInfoItem(
+                              Icons.calendar_today,
+                              'Duration',
+                              '${itinerary.dailyItineraries.length} days', // Using dailyItineraries.length instead of duration
+                            ),
+                            _buildInfoItem(
+                              Icons.people,
+                              'Travelers',
+                              '2 people', // Hardcoded value
+                            ),
+                            _buildInfoItem(
+                              Icons.account_balance_wallet,
+                              'Budget',
+                              '₹${itinerary.totalBudget}', // Using totalBudget
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildWeatherItem('Day 1', 'Sunny', '32°C'),
+                            _buildWeatherItem('Day 2', 'Cloudy', '28°C'),
+                            _buildWeatherItem('Day 3', 'Rainy', '25°C'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Manage Itinerary Section
+            AnimatedContent(
+              delay: const Duration(milliseconds: 300),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Manage Your Trip',
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildManageButton(
+                              icon: Icons.edit,
+                              label: 'Edit Trip',
+                              onTap:
+                                  () => _showEditTripDialog(context, itinerary),
+                            ),
+                            _buildManageButton(
+                              icon: Icons.add_circle_outline,
+                              label: 'Add Activity',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Add activity feature coming soon!',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            _buildManageButton(
+                              icon: Icons.delete_outline,
+                              label: 'Delete Trip',
+                              onTap: () {
+                                _showDeleteConfirmationDialog(context);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Itinerary Tabs
+            AnimatedContent(
+              delay: const Duration(milliseconds: 400),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: DefaultTabController(
+                  length: 2,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Tips banner at the top
-                      AnimatedContent(
-                        delay: const Duration(milliseconds: 100),
-                        child: const TipsBanner(
-                          tip:
-                              'Consider visiting Fort Aguada early in the morning to avoid crowds and get the best photos!',
+                      TabBar(
+                        labelColor: AppTheme.primaryColor,
+                        unselectedLabelColor: Colors.grey[600],
+                        indicatorColor: AppTheme.primaryColor,
+                        tabs: const [
+                          Tab(text: 'Daily Itinerary'),
+                          Tab(text: 'Mumbai Tour'),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 400.h,
+                        child: TabBarView(
+                          children: [
+                            _buildDailyItineraryTab(itinerary),
+                            _buildMumbaiTourTab(),
+                          ],
                         ),
                       ),
-
-                      // Trip Overview Card
-                      AnimatedContent(
-                        delay: const Duration(milliseconds: 200),
-                        child: Padding(
-                          padding: EdgeInsets.all(16.w),
-                          child: Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.r),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(16.w),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    itinerary.title,
-                                    style: GoogleFonts.playfairDisplay(
-                                      fontSize: 24.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    itinerary.subtitle,
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 16.sp,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h),
-                                  Text(
-                                    'October 15 – October 20, 2025',
-                                    style: GoogleFonts.roboto(
-                                      fontSize: 14.sp,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                  SizedBox(height: 16.h),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.people,
-                                        size: 16.sp,
-                                        color: Colors.grey[600],
-                                      ),
-                                      SizedBox(width: 4.w),
-                                      Text(
-                                        '${itinerary.travelers} Travelers',
-                                        style: GoogleFonts.roboto(
-                                          fontSize: 14.sp,
-                                        ),
-                                      ),
-                                      SizedBox(width: 16.w),
-                                      Icon(
-                                        Icons.account_balance_wallet,
-                                        size: 16.sp,
-                                        color: Colors.grey[600],
-                                      ),
-                                      SizedBox(width: 4.w),
-                                      Text(
-                                        '₹${itinerary.budget} Budget',
-                                        style: GoogleFonts.roboto(
-                                          fontSize: 14.sp,
-                                        ),
-                                      ),
-                                      SizedBox(width: 16.w),
-                                      Icon(
-                                        Icons.location_on,
-                                        size: 16.sp,
-                                        color: Colors.grey[600],
-                                      ),
-                                      SizedBox(width: 4.w),
-                                      Expanded(
-                                        child: Text(
-                                          'From ${itinerary.startLocation}',
-                                          style: GoogleFonts.roboto(
-                                            fontSize: 14.sp,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Highlights Carousel
-                      AnimatedContent(
-                        delay: const Duration(milliseconds: 300),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Highlights',
-                                style: GoogleFonts.playfairDisplay(
-                                  fontSize: 20.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              SizedBox(
-                                height: 150.h,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: itinerary.highlights.length,
-                                  itemBuilder: (context, index) {
-                                    final highlight =
-                                        itinerary.highlights[index];
-                                    return AnimatedContent(
-                                      delay: Duration(
-                                        milliseconds: 400 + (index * 100),
-                                      ),
-                                      slideBegin: const Offset(1.0, 0.0),
-                                      child: Container(
-                                        width: 200.w,
-                                        margin: EdgeInsets.only(right: 12.w),
-                                        child: Card(
-                                          clipBehavior: Clip.antiAlias,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12.r,
-                                            ),
-                                          ),
-                                          child: Stack(
-                                            fit: StackFit.expand,
-                                            children: [
-                                              // Placeholder image with gradient overlay
-                                              Container(
-                                                color: Colors.grey[300],
-                                                child: Center(
-                                                  child: Icon(
-                                                    Icons.image,
-                                                    size: 40.sp,
-                                                    color: Colors.grey[400],
-                                                  ),
-                                                ),
-                                              ),
-                                              // Gradient overlay
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topCenter,
-                                                    end: Alignment.bottomCenter,
-                                                    colors: [
-                                                      Colors.transparent,
-                                                      Colors.black.withAlpha(
-                                                        179,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              // Caption
-                                              Positioned(
-                                                bottom: 12,
-                                                left: 12,
-                                                right: 12,
-                                                child: Text(
-                                                  highlight,
-                                                  style: GoogleFonts.roboto(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14.sp,
-                                                  ),
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-
-                      // Weather Forecast
-                      AnimatedContent(
-                        delay: const Duration(milliseconds: 500),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Weather Forecast',
-                                style: GoogleFonts.playfairDisplay(
-                                  fontSize: 20.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              SizedBox(
-                                height: 100.h,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: itinerary.weatherForecast.length,
-                                  itemBuilder: (context, index) {
-                                    final weather =
-                                        itinerary.weatherForecast[index];
-                                    return AnimatedContent(
-                                      delay: Duration(
-                                        milliseconds: 600 + (index * 100),
-                                      ),
-                                      slideBegin: const Offset(0.0, 0.5),
-                                      child: Container(
-                                        width: 100.w,
-                                        margin: EdgeInsets.only(right: 8.w),
-                                        child: Card(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12.r,
-                                            ),
-                                          ),
-                                          child: Padding(
-                                            padding: EdgeInsets.all(8.w),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  '${weather.date.day}/${weather.date.month}',
-                                                  style: GoogleFonts.roboto(
-                                                    fontSize: 12.sp,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                SizedBox(height: 4.h),
-                                                Text(
-                                                  '${weather.temperature}°C',
-                                                  style: GoogleFonts.roboto(
-                                                    fontSize: 16.sp,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                                SizedBox(height: 4.h),
-                                                Icon(
-                                                  _getWeatherIcon(
-                                                    weather.condition,
-                                                  ),
-                                                  size: 20.sp,
-                                                  color: AppTheme.primaryColor,
-                                                ),
-                                                SizedBox(height: 4.h),
-                                                Text(
-                                                  weather.condition,
-                                                  style: GoogleFonts.roboto(
-                                                    fontSize: 10.sp,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-
-                      // Tabbed Section
-                      AnimatedContent(
-                        delay: const Duration(milliseconds: 700),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.w),
-                          child: DefaultTabController(
-                            length: 5,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                TabBar(
-                                  isScrollable: true,
-                                  labelColor: AppTheme.primaryColor,
-                                  unselectedLabelColor: Colors.grey[600],
-                                  indicatorColor: AppTheme.primaryColor,
-                                  tabs: const [
-                                    Tab(text: 'Mumbai Tour'),
-                                    Tab(text: 'Daily Itinerary'),
-                                    Tab(text: 'Accommodation'),
-                                    Tab(text: 'Transportation'),
-                                    Tab(text: 'Travel Tips'),
-                                  ],
-                                ),
-                                SizedBox(
-                                  height: 300.h,
-                                  child: TabBarView(
-                                    children: [
-                                      // Mumbai Tour Tab
-                                      _buildMumbaiTourTab(),
-
-                                      // Daily Itinerary Tab
-                                      _buildDailyItineraryTab(itinerary),
-
-                                      // Accommodation Tab
-                                      Center(
-                                        child: Text(
-                                          'Accommodation content coming soon',
-                                          style: GoogleFonts.roboto(
-                                            fontSize: 16.sp,
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Transportation Tab
-                                      Center(
-                                        child: Text(
-                                          'Transportation content coming soon',
-                                          style: GoogleFonts.roboto(
-                                            fontSize: 16.sp,
-                                          ),
-                                        ),
-                                      ),
-
-                                      // Travel Tips Tab
-                                      Center(
-                                        child: Text(
-                                          'Travel Tips content coming soon',
-                                          style: GoogleFonts.roboto(
-                                            fontSize: 16.sp,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
                     ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  // Helper method to build empty trips view
+  Widget _buildEmptyTripsView({required bool isUpcoming}) {
+    return AnimatedContent(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isUpcoming ? Icons.flight_takeoff : Icons.history,
+              size: 80.sp,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              isUpcoming ? 'No Upcoming Trips' : 'No Past Trips',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              isUpcoming
+                  ? 'Plan a trip to see it here'
+                  : 'Your completed trips will appear here',
+              style: GoogleFonts.roboto(
+                fontSize: 16.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 32.h),
+            ElevatedButton.icon(
+              onPressed: () {
+                if (isUpcoming) {
+                  // Navigate to trip planner
+                  context.go('/');
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Plan a New Trip'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper method to build past trips tab
+  Widget _buildPastTripsTab() {
+    return _buildEmptyTripsView(isUpcoming: false);
+  }
+
+  // Helper method to build info item
+  Widget _buildInfoItem(IconData icon, String label, String value) {
+    return Column(
+      children: [
+        Icon(icon, color: AppTheme.primaryColor, size: 20.sp),
+        SizedBox(height: 4.h),
+        Text(
+          label,
+          style: GoogleFonts.roboto(fontSize: 12.sp, color: Colors.grey[600]),
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          value,
+          style: GoogleFonts.roboto(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to build weather item
+  Widget _buildWeatherItem(String day, String condition, String temp) {
+    return Column(
+      children: [
+        Text(
+          day,
+          style: GoogleFonts.roboto(fontSize: 12.sp, color: Colors.grey[600]),
+        ),
+        SizedBox(height: 4.h),
+        Icon(
+          _getWeatherIcon(condition),
+          color: AppTheme.primaryColor,
+          size: 20.sp,
+        ),
+        SizedBox(height: 2.h),
+        Text(
+          temp,
+          style: GoogleFonts.roboto(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Helper method to get weather icon
+  IconData _getWeatherIcon(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'sunny':
+        return Icons.wb_sunny;
+      case 'cloudy':
+        return Icons.cloud;
+      case 'rainy':
+        return Icons.water_drop;
+      case 'stormy':
+        return Icons.thunderstorm;
+      default:
+        return Icons.wb_sunny;
+    }
+  }
+
+  // Helper method to build manage button
+  Widget _buildManageButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppTheme.primaryColor, size: 24.sp),
+            SizedBox(height: 8.h),
+            Text(
+              label,
+              style: GoogleFonts.roboto(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show delete confirmation dialog
+  void _showDeleteConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            'Delete Trip',
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete this trip? This action cannot be undone.',
+            style: GoogleFonts.roboto(color: Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel', style: TextStyle(color: Colors.grey[700])),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Trip deleted successfully!'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Show edit trip dialog
+  void _showEditTripDialog(BuildContext context, ItineraryDetail itinerary) {
+    // Controllers for text fields
+    final titleController = TextEditingController(text: itinerary.title);
+    final startDateController = TextEditingController(
+      text:
+          "${itinerary.startDate.day}/${itinerary.startDate.month}/${itinerary.startDate.year}",
+    );
+    final endDateController = TextEditingController(
+      text:
+          "${itinerary.endDate.day}/${itinerary.endDate.month}/${itinerary.endDate.year}",
+    );
+    final budgetController = TextEditingController(
+      text: itinerary.budget.toString(),
+    );
+    final travelersController = TextEditingController(
+      text: itinerary.travelers.toString(),
+    );
+
+    // Selected dates
+    DateTime selectedStartDate = itinerary.startDate;
+    DateTime selectedEndDate = itinerary.endDate;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(
+                'Edit Trip',
+                style: GoogleFonts.playfairDisplay(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Trip Title
+                    TextField(
+                      controller: titleController,
+                      decoration: InputDecoration(
+                        labelText: 'Trip Title',
+                        labelStyle: TextStyle(color: Colors.black87),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Start Date
+                    GestureDetector(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedStartDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2030),
+                        );
+                        if (picked != null && picked != selectedStartDate) {
+                          setState(() {
+                            selectedStartDate = picked;
+                            startDateController.text =
+                                "${picked.day}/${picked.month}/${picked.year}";
+                          });
+                        }
+                      },
+                      child: AbsorbPointer(
+                        child: TextField(
+                          controller: startDateController,
+                          decoration: InputDecoration(
+                            labelText: 'Start Date',
+                            labelStyle: TextStyle(color: Colors.black87),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            suffixIcon: Icon(Icons.calendar_today),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // End Date
+                    GestureDetector(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedEndDate,
+                          firstDate: selectedStartDate,
+                          lastDate: DateTime(2030),
+                        );
+                        if (picked != null && picked != selectedEndDate) {
+                          setState(() {
+                            selectedEndDate = picked;
+                            endDateController.text =
+                                "${picked.day}/${picked.month}/${picked.year}";
+                          });
+                        }
+                      },
+                      child: AbsorbPointer(
+                        child: TextField(
+                          controller: endDateController,
+                          decoration: InputDecoration(
+                            labelText: 'End Date',
+                            labelStyle: TextStyle(color: Colors.black87),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12.r),
+                            ),
+                            suffixIcon: Icon(Icons.calendar_today),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Budget
+                    TextField(
+                      controller: budgetController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Budget (₹)',
+                        labelStyle: TextStyle(color: Colors.black87),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // Travelers
+                    TextField(
+                      controller: travelersController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Number of Travelers',
+                        labelStyle: TextStyle(color: Colors.black87),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.grey[700]),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Here you would update the itinerary with the new values
+                    // For now, we'll just show a success message
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Trip updated successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                  ),
+                  child: Text(
+                    'Save Changes',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -458,54 +725,145 @@ class _ItineraryScreenAnimatedState
         return AnimatedContent(
           delay: Duration(milliseconds: 800 + (index * 100)),
           slideBegin: const Offset(0.3, 0.0),
-          child: ExpansionTile(
-            title: Text(
-              'Day ${day.day}: ${day.title}',
-              style: GoogleFonts.roboto(
-                fontWeight: FontWeight.bold,
-                fontSize: 16.sp,
-              ),
+          child: Card(
+            margin: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
             ),
-            subtitle: Text(
-              day.description,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.roboto(
-                fontSize: 12.sp,
-                color: Colors.grey[600],
-              ),
+            child: Column(
+              children: [
+                // Day header
+                ExpansionTile(
+                  title: Text(
+                    'Day ${day.day}: ${day.title}',
+                    style: GoogleFonts.roboto(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16.sp,
+                      color: Colors.black,
+                    ),
+                  ),
+                  subtitle: Text(
+                    day.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.roboto(
+                      fontSize: 12.sp,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  children: [
+                    // Map showing the day's route
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 8.h,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Map title
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.map,
+                                size: 18.sp,
+                                color: AppTheme.primaryColor,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Day ${day.day} Route Map',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+
+                          // Map widget
+                          ItineraryMap(dailyItinerary: day),
+                          SizedBox(height: 16.h),
+
+                          // Activities header
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                size: 18.sp,
+                                color: AppTheme.primaryColor,
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                'Day ${day.day} Schedule',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+
+                          // Activities list
+                          ...day.activities.map(
+                            (activity) => ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                              ),
+                              leading: Container(
+                                width: 40.w,
+                                height: 40.w,
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryColor.withAlpha(26),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    activity.time,
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.primaryColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              title: Text(
+                                activity.title,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              subtitle: Text(
+                                activity.description,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 12.sp,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              trailing: Text(
+                                '₹${activity.cost}',
+                                style: GoogleFonts.roboto(
+                                  fontSize: 12.sp,
+                                  color: AppTheme.primaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            children:
-                day.activities.map((activity) {
-                  return ListTile(
-                    leading: Text(
-                      activity.time,
-                      style: GoogleFonts.roboto(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    title: Text(
-                      activity.title,
-                      style: GoogleFonts.roboto(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      activity.description,
-                      style: GoogleFonts.roboto(fontSize: 12.sp),
-                    ),
-                    trailing: Text(
-                      '₹${activity.cost}',
-                      style: GoogleFonts.roboto(
-                        fontSize: 12.sp,
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                }).toList(),
           ),
         );
       },
@@ -593,21 +951,5 @@ class _ItineraryScreenAnimatedState
         },
       ),
     );
-  }
-
-  // Helper method to get weather icon
-  IconData _getWeatherIcon(String condition) {
-    switch (condition.toLowerCase()) {
-      case 'sunny':
-        return Icons.wb_sunny;
-      case 'cloudy':
-        return Icons.cloud;
-      case 'rainy':
-        return Icons.water_drop;
-      case 'stormy':
-        return Icons.thunderstorm;
-      default:
-        return Icons.wb_sunny;
-    }
   }
 }

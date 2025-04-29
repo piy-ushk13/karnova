@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:karnova/routes/custom_transitions.dart';
 import 'package:karnova/screens/about_screen.dart';
+import 'package:karnova/screens/ai_trip_planner_screen.dart';
 import 'package:karnova/screens/contact_screen.dart';
 import 'package:karnova/screens/contacts_management_screen.dart';
 import 'package:karnova/screens/destinations_screen_animated.dart';
 import 'package:karnova/screens/destination_detail_animated.dart';
 import 'package:karnova/screens/bookings_screen.dart';
+import 'package:karnova/screens/home_screen_modern.dart';
 import 'package:karnova/screens/home_screen_new_design.dart';
+import 'package:karnova/screens/home_screen_optimized.dart';
 import 'package:karnova/screens/itinerary_screen_animated.dart';
 import 'package:karnova/screens/profile_screen_redesign.dart';
 import 'package:karnova/screens/results_screen.dart';
@@ -55,7 +58,7 @@ final appRouter = GoRouter(
     return null;
   },
   routes: [
-    // Home screen route
+    // Home screen route (Optimized Design)
     GoRoute(
       path: '/',
       name: 'home',
@@ -63,7 +66,46 @@ final appRouter = GoRouter(
           (context, state) => CustomPageTransitions.slideTransition(
             context: context,
             state: state,
+            child: const HomeScreenOptimized(),
+            rightToLeft: true,
+          ),
+    ),
+
+    // Modern home screen route (accessible via /modern-home)
+    GoRoute(
+      path: '/modern-home',
+      name: 'modern-home',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
+            child: const HomeScreenModern(),
+            rightToLeft: true,
+          ),
+    ),
+
+    // Old home screen route (accessible via /old-home)
+    GoRoute(
+      path: '/old-home',
+      name: 'old-home',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
             child: const HomeScreenNewDesign(),
+            rightToLeft: true,
+          ),
+    ),
+
+    // AI Trip Planner screen route
+    GoRoute(
+      path: '/ai-trip-planner',
+      name: 'ai-trip-planner',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
+            child: const AITripPlannerScreen(),
             rightToLeft: true,
           ),
     ),

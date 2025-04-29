@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:karnova/models/destination.dart';
 import 'package:karnova/services/api_service.dart';
 import 'package:karnova/utils/theme.dart';
-import 'package:karnova/widgets/global_navigation.dart';
 
 // Provider for popular places
 final popularPlacesProvider = FutureProvider<List<Destination>>((ref) async {
@@ -58,7 +57,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _selectedCategory = 'All destinations';
+  final String _selectedCategory = 'All destinations';
 
   final List<String> _categories = [
     'All destinations',

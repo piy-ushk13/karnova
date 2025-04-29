@@ -6,7 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:karnova/models/destination.dart';
 import 'package:karnova/services/api_service.dart';
 import 'package:karnova/utils/theme.dart';
-import 'package:karnova/widgets/animated_content.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
 
 // Provider for destination details

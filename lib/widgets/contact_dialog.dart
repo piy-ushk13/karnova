@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:karnova/models/contact.dart';
-import 'package:karnova/utils/theme.dart';
 
 class ContactDialog extends ConsumerStatefulWidget {
   final Contact? contact; // Null for adding new contact, non-null for editing

@@ -2,9 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:karnova/models/transport_mode.dart';
 import 'package:karnova/providers/trip_providers.dart';
+import 'package:karnova/repositories/trip_planning_repository.dart';
 import 'package:karnova/utils/theme.dart';
 import 'package:karnova/widgets/animated_content.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
@@ -16,9 +18,17 @@ class BookingsScreen extends ConsumerStatefulWidget {
   ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
 }
 
-class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTickerProviderStateMixin {
+class _BookingsScreenState extends ConsumerState<BookingsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> _bookingTypes = ['All', 'Hotels', 'Flights', 'Trains', 'Buses', 'Cars'];
+  final List<String> _bookingTypes = [
+    'All',
+    'Hotels',
+    'Flights',
+    'Trains',
+    'Buses',
+    'Cars',
+  ];
   String _selectedType = 'All';
 
   @override
@@ -51,10 +61,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
           labelColor: AppTheme.primaryColor,
           unselectedLabelColor: Colors.grey[600],
           indicatorColor: AppTheme.primaryColor,
-          tabs: const [
-            Tab(text: 'Upcoming'),
-            Tab(text: 'Past'),
-          ],
+          tabs: const [Tab(text: 'Upcoming'), Tab(text: 'Past')],
         ),
       ),
       body: TabBarView(
@@ -86,7 +93,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                   itemBuilder: (context, index) {
                     final type = _bookingTypes[index];
                     final isSelected = type == _selectedType;
-                    
+
                     return AnimatedContent(
                       delay: Duration(milliseconds: 300 + (index * 50)),
                       slideBegin: const Offset(1.0, 0.0),
@@ -97,7 +104,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                             type,
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                               fontSize: 14.sp,
                             ),
                           ),
@@ -107,7 +117,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20.r),
                             side: BorderSide(
-                              color: isSelected ? Colors.transparent : Colors.grey[300]!,
+                              color:
+                                  isSelected
+                                      ? Colors.transparent
+                                      : Colors.grey[300]!,
                             ),
                           ),
                           onSelected: (selected) {
@@ -124,13 +137,14 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                 ),
               ),
             ),
-            
+
             SizedBox(height: 24.h),
-            
+
             // Bookings list
             AnimatedContent(
               delay: const Duration(milliseconds: 400),
-              child: isUpcoming ? _buildUpcomingBookings() : _buildPastBookings(),
+              child:
+                  isUpcoming ? _buildUpcomingBookings() : _buildPastBookings(),
             ),
           ],
         ),
@@ -139,17 +153,22 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
   }
 
   Widget _buildUpcomingBookings() {
+    // Get the generated itinerary if available
+    final generatedItinerary = ref.watch(generatedItineraryDetailProvider);
+
     // Get selected transport modes from provider
     final selectedModes = ref.watch(selectedTransportModesProvider);
-    
-    // If no transport modes are selected or filter is not "All", show empty state
-    if (selectedModes.isEmpty && _selectedType == 'All') {
+
+    // If no itinerary is generated and no transport modes are selected, show empty state
+    if (generatedItinerary == null &&
+        selectedModes.isEmpty &&
+        _selectedType == 'All') {
       return _buildEmptyState(
         'No upcoming bookings',
         'Your upcoming bookings will appear here once you confirm a trip.',
       );
     }
-    
+
     // Filter bookings based on selected type
     List<TransportMode> filteredModes = [];
     if (_selectedType == 'All') {
@@ -185,16 +204,17 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
           break;
       }
     }
-    
+
     if (filteredModes.isEmpty && _selectedType != 'Hotels') {
       return _buildEmptyState(
         'No ${_selectedType.toLowerCase()} bookings',
         'Your ${_selectedType.toLowerCase()} bookings will appear here once you confirm a trip with this transport mode.',
       );
     }
-    
-    // Show hotel booking if "All" or "Hotels" is selected and a trip is confirmed
-    if ((_selectedType == 'All' || _selectedType == 'Hotels') && ref.watch(isTripConfirmedProvider)) {
+
+    // Show hotel booking if "All" or "Hotels" is selected and a trip is confirmed or an itinerary is generated
+    if ((_selectedType == 'All' || _selectedType == 'Hotels') &&
+        (ref.watch(isTripConfirmedProvider) || generatedItinerary != null)) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -212,7 +232,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
             SizedBox(height: 24.h),
           ] else
             _buildHotelBooking(),
-            
+
           if (filteredModes.isNotEmpty && _selectedType == 'All') ...[
             Text(
               'Transport Bookings',
@@ -224,27 +244,27 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
             ),
             SizedBox(height: 16.h),
           ],
-          
-          ...filteredModes.map((mode) => _buildTransportBooking(mode)).toList(),
+
+          ...filteredModes.map((mode) => _buildTransportBooking(mode)),
         ],
       );
     }
-    
+
     // Show only transport bookings
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: filteredModes.map((mode) => _buildTransportBooking(mode)).toList(),
+      children:
+          filteredModes.map((mode) => _buildTransportBooking(mode)).toList(),
     );
   }
 
   Widget _buildHotelBooking() {
     final tripData = ref.watch(currentTripProvider);
-    
+    final generatedItinerary = ref.watch(generatedItineraryDetailProvider);
+
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -270,7 +290,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Luxury Hotel',
+                        generatedItinerary != null &&
+                                generatedItinerary.accommodations.isNotEmpty
+                            ? generatedItinerary.accommodations.first.name
+                            : 'Luxury Hotel',
                         style: GoogleFonts.roboto(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.bold,
@@ -279,7 +302,11 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        tripData?['destination'] ?? 'Unknown Location',
+                        generatedItinerary != null
+                            ? generatedItinerary.title.split(
+                              ' ',
+                            )[1] // Extract destination from title
+                            : tripData?['destination'] ?? 'Unknown Location',
                         style: GoogleFonts.roboto(
                           fontSize: 14.sp,
                           color: Colors.black87,
@@ -289,7 +316,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 6.h,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withAlpha(26),
                     borderRadius: BorderRadius.circular(16.r),
@@ -311,9 +341,24 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildBookingDetail('Check-in', tripData?['date'] ?? 'Unknown'),
-                _buildBookingDetail('Check-out', 'In 3 days'),
-                _buildBookingDetail('Guests', '2 Adults'),
+                _buildBookingDetail(
+                  'Check-in',
+                  generatedItinerary != null
+                      ? '${generatedItinerary.startDate.day}/${generatedItinerary.startDate.month}/${generatedItinerary.startDate.year}'
+                      : tripData?['date'] ?? 'Unknown',
+                ),
+                _buildBookingDetail(
+                  'Check-out',
+                  generatedItinerary != null
+                      ? '${generatedItinerary.endDate.day}/${generatedItinerary.endDate.month}/${generatedItinerary.endDate.year}'
+                      : 'In 3 days',
+                ),
+                _buildBookingDetail(
+                  'Guests',
+                  generatedItinerary != null
+                      ? '${generatedItinerary.travelers} Adults'
+                      : '2 Adults',
+                ),
               ],
             ),
             SizedBox(height: 16.h),
@@ -354,26 +399,42 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
 
   Widget _buildTransportBooking(TransportMode mode) {
     final tripData = ref.watch(currentTripProvider);
-    
+    final generatedItinerary = ref.watch(generatedItineraryDetailProvider);
+
     // Define icon and title based on transport mode
     IconData icon;
     String title;
     String provider;
-    
+
+    // Get destination from generated itinerary or trip data
+    String destination = 'Unknown';
+    if (generatedItinerary != null) {
+      destination =
+          generatedItinerary.title.split(
+            ' ',
+          )[1]; // Extract destination from title
+    } else if (tripData != null && tripData['destination'] != null) {
+      destination = tripData['destination'];
+    }
+
     switch (mode) {
       case TransportMode.flight:
         icon = Icons.flight;
-        title = 'Flight to ${tripData?['destination'] ?? 'Unknown'}';
-        provider = 'Air India';
+        title = 'Flight to $destination';
+        provider =
+            generatedItinerary != null &&
+                    generatedItinerary.transportations.isNotEmpty
+                ? generatedItinerary.transportations.first.provider
+                : 'Air India';
         break;
       case TransportMode.train:
         icon = Icons.train;
-        title = 'Train to ${tripData?['destination'] ?? 'Unknown'}';
+        title = 'Train to $destination';
         provider = 'Indian Railways';
         break;
       case TransportMode.bus:
         icon = Icons.directions_bus;
-        title = 'Bus to ${tripData?['destination'] ?? 'Unknown'}';
+        title = 'Bus to $destination';
         provider = 'RedBus';
         break;
       case TransportMode.car:
@@ -383,11 +444,11 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
         break;
       case TransportMode.ferry:
         icon = Icons.directions_boat;
-        title = 'Ferry to ${tripData?['destination'] ?? 'Unknown'}';
+        title = 'Ferry to $destination';
         provider = 'Ferry Services';
         break;
     }
-    
+
     return Padding(
       padding: EdgeInsets.only(bottom: 16.h),
       child: Card(
@@ -439,7 +500,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withAlpha(26),
                       borderRadius: BorderRadius.circular(16.r),
@@ -461,9 +525,19 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildBookingDetail('From', tripData?['source'] ?? 'Unknown'),
-                  _buildBookingDetail('To', tripData?['destination'] ?? 'Unknown'),
-                  _buildBookingDetail('Date', tripData?['date'] ?? 'Unknown'),
+                  _buildBookingDetail(
+                    'From',
+                    generatedItinerary != null
+                        ? generatedItinerary.startLocation
+                        : tripData?['source'] ?? 'Unknown',
+                  ),
+                  _buildBookingDetail('To', destination),
+                  _buildBookingDetail(
+                    'Date',
+                    generatedItinerary != null
+                        ? '${generatedItinerary.startDate.day}/${generatedItinerary.startDate.month}/${generatedItinerary.startDate.year}'
+                        : tripData?['date'] ?? 'Unknown',
+                  ),
                 ],
               ),
               SizedBox(height: 16.h),
@@ -517,11 +591,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.bookmark_border,
-              size: 80.sp,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.bookmark_border, size: 80.sp, color: Colors.grey[400]),
             SizedBox(height: 24.h),
             Text(
               title,
@@ -543,7 +613,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
             ),
             SizedBox(height: 32.h),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                // Navigate to the home page (trip planner)
+                context.go('/');
+              },
               icon: const Icon(Icons.add),
               label: const Text('Plan a Trip'),
               style: ElevatedButton.styleFrom(
@@ -564,10 +637,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
       children: [
         Text(
           label,
-          style: GoogleFonts.roboto(
-            fontSize: 12.sp,
-            color: Colors.grey[600],
-          ),
+          style: GoogleFonts.roboto(fontSize: 12.sp, color: Colors.grey[600]),
         ),
         SizedBox(height: 4.h),
         Text(

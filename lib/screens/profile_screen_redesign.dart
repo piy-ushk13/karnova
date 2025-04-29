@@ -145,16 +145,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final upcomingTrips = ref.watch(upcomingTripsProvider);
 
     return Theme(
-      data: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E1E1E),
+      data: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
           elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20.sp,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         cardTheme: CardTheme(
-          color: const Color(0xFF1E1E1E),
+          color: Colors.white,
+          elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
+            side: BorderSide(color: Colors.grey[200]!),
           ),
         ),
       ),
@@ -197,7 +205,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           style: TextStyle(
                             fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                         TextButton(
@@ -250,7 +258,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           style: TextStyle(
                             fontSize: 18.sp,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
                         ),
                         TextButton(
@@ -305,7 +313,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               style: TextStyle(
                                 fontSize: 18.sp,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: Colors.black,
                               ),
                             ),
                             SizedBox(height: 16.h),
@@ -368,12 +376,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   context: context,
                                   builder:
                                       (context) => AlertDialog(
-                                        backgroundColor: const Color(
-                                          0xFF2A2A2A,
+                                        backgroundColor: Colors.white,
+                                        title: const Text(
+                                          'Logout',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                        title: const Text('Logout'),
                                         content: const Text(
                                           'Are you sure you want to logout?',
+                                          style: TextStyle(
+                                            color: Colors.black87,
+                                          ),
                                         ),
                                         actions: [
                                           TextButton(
@@ -448,7 +463,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Padding(
                   padding: EdgeInsets.all(4.w),
                   child: CircleAvatar(
-                    backgroundColor: const Color(0xFF1E1E1E),
+                    backgroundColor: Colors.white,
                     backgroundImage: const NetworkImage(
                       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80',
                     ),
@@ -465,19 +480,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Colors.black,
             ),
           ),
 
           SizedBox(height: 4.h),
           Text(
             'Travel Enthusiast',
-            style: TextStyle(fontSize: 16.sp, color: Colors.grey[400]),
+            style: TextStyle(fontSize: 16.sp, color: Colors.grey[700]),
           ),
           SizedBox(height: 8.h),
           Text(
             'john.doe@example.com',
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+            style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
           ),
           SizedBox(height: 16.h),
 
@@ -511,8 +526,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 icon: const Icon(Icons.share),
                 label: const Text('Share'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: const BorderSide(color: Colors.white),
+                  foregroundColor: const Color(0xFF4E79FF),
+                  side: const BorderSide(color: Color(0xFF4E79FF)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.r),
                   ),
@@ -539,7 +554,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black,
                 ),
               ),
               SizedBox(height: 16.h),
@@ -601,11 +616,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.black,
           ),
         ),
         SizedBox(height: 4.h),
-        Text(label, style: TextStyle(fontSize: 12.sp, color: Colors.grey[400])),
+        Text(label, style: TextStyle(fontSize: 12.sp, color: Colors.grey[700])),
       ],
     );
   }
@@ -868,10 +883,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     VoidCallback onTap,
   ) {
     return ListTile(
-      leading: Icon(icon, color: Colors.blue[300]),
-      title: Text(title),
-      subtitle: Text(subtitle, style: TextStyle(color: Colors.grey[500])),
-      trailing: const Icon(Icons.chevron_right, color: Colors.white),
+      leading: Icon(icon, color: const Color(0xFF4E79FF)),
+      title: Text(title, style: const TextStyle(color: Colors.black87)),
+      subtitle: Text(subtitle, style: TextStyle(color: Colors.grey[600])),
+      trailing: const Icon(Icons.chevron_right, color: Colors.black54),
       onTap: onTap,
     );
   }
@@ -915,7 +930,11 @@ class _ShimmerTextState extends State<ShimmerText>
         return ShaderMask(
           shaderCallback: (bounds) {
             return LinearGradient(
-              colors: const [Colors.white, Colors.blue, Colors.white],
+              colors: const [
+                Color(0xFF000000),
+                Color(0xFF4E79FF),
+                Color(0xFF000000),
+              ],
               stops: const [0.0, 0.5, 1.0],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -924,7 +943,7 @@ class _ShimmerTextState extends State<ShimmerText>
           },
           child: Text(
             widget.text,
-            style: widget.style.copyWith(color: Colors.white),
+            style: widget.style.copyWith(color: Colors.black),
           ),
         );
       },
