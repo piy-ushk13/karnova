@@ -204,7 +204,12 @@ class _DestinationsScreenRedesignState
           // Handle filter selection
         },
         backgroundColor: Colors.white,
-        selectedColor: AppTheme.primaryColor.withOpacity(0.1),
+        selectedColor: Color.fromRGBO(
+          AppTheme.primaryColor.r.toInt(),
+          AppTheme.primaryColor.g.toInt(),
+          AppTheme.primaryColor.b.toInt(),
+          0.1,
+        ),
         checkmarkColor: AppTheme.primaryColor,
         labelStyle: TextStyle(
           color: isSelected ? AppTheme.primaryColor : Colors.black87,
@@ -228,7 +233,12 @@ class _DestinationsScreenRedesignState
           borderRadius: BorderRadius.circular(16.r),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(
+                red: 0,
+                green: 0,
+                blue: 0,
+                alpha: 13,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -262,7 +272,12 @@ class _DestinationsScreenRedesignState
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.5),
+                            Colors.black.withValues(
+                              red: 0,
+                              green: 0,
+                              blue: 0,
+                              alpha: 128,
+                            ),
                           ],
                           stops: const [0.6, 1.0],
                         ),
@@ -291,7 +306,12 @@ class _DestinationsScreenRedesignState
                                 shadows: [
                                   Shadow(
                                     blurRadius: 2,
-                                    color: Colors.black.withOpacity(0.5),
+                                    color: Colors.black.withValues(
+                                      red: 0,
+                                      green: 0,
+                                      blue: 0,
+                                      alpha: 128,
+                                    ),
                                     offset: const Offset(0, 1),
                                   ),
                                 ],
@@ -314,7 +334,12 @@ class _DestinationsScreenRedesignState
                                     shadows: [
                                       Shadow(
                                         blurRadius: 2,
-                                        color: Colors.black.withOpacity(0.5),
+                                        color: Colors.black.withValues(
+                                          red: 0,
+                                          green: 0,
+                                          blue: 0,
+                                          alpha: 128,
+                                        ),
                                         offset: const Offset(0, 1),
                                       ),
                                     ],
@@ -332,7 +357,12 @@ class _DestinationsScreenRedesignState
                             vertical: 4.h,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withValues(
+                              red: 0,
+                              green: 0,
+                              blue: 0,
+                              alpha: 153,
+                            ),
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Row(

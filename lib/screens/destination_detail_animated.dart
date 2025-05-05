@@ -6,11 +6,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:karnova/models/destination.dart';
 import 'package:karnova/services/api_service.dart';
 import 'package:karnova/utils/theme.dart';
+import 'package:karnova/widgets/ai_image.dart';
 import 'package:karnova/widgets/animated_content.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
 
 // Provider for destination details
-final destinationDetailProvider = FutureProvider.family<Destination, String>((ref, id) async {
+final destinationDetailProvider = FutureProvider.family<Destination, String>((
+  ref,
+  id,
+) async {
   try {
     final apiService = ref.read(apiServiceProvider);
     return await apiService.getDestinationById(id);
@@ -22,16 +26,16 @@ final destinationDetailProvider = FutureProvider.family<Destination, String>((re
 class DestinationDetailAnimated extends ConsumerStatefulWidget {
   final String destinationId;
 
-  const DestinationDetailAnimated({
-    super.key,
-    required this.destinationId,
-  });
+  const DestinationDetailAnimated({super.key, required this.destinationId});
 
   @override
-  ConsumerState<DestinationDetailAnimated> createState() => _DestinationDetailAnimatedState();
+  ConsumerState<DestinationDetailAnimated> createState() =>
+      _DestinationDetailAnimatedState();
 }
 
-class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAnimated> with SingleTickerProviderStateMixin {
+class _DestinationDetailAnimatedState
+    extends ConsumerState<DestinationDetailAnimated>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -48,16 +52,18 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
 
   @override
   Widget build(BuildContext context) {
-    final destinationAsync = ref.watch(destinationDetailProvider(widget.destinationId));
+    final destinationAsync = ref.watch(
+      destinationDetailProvider(widget.destinationId),
+    );
 
     return Scaffold(
       bottomNavigationBar: const CustomBottomNavbar(currentRoute: '/detail'),
       body: destinationAsync.when(
         data: (destination) => _buildContent(destination),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Text('Error loading destination: $error'),
-        ),
+        error:
+            (error, stackTrace) =>
+                Center(child: Text('Error loading destination: $error')),
       ),
     );
   }
@@ -66,26 +72,29 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
     return Stack(
       children: [
         // Background image with gradient overlay
-        Container(
+        SizedBox(
           height: 300.h,
           width: double.infinity,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(destination.image),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withAlpha(150),
-                ],
+          child: Stack(
+            children: [
+              AIImage(
+                imageUrl: destination.image,
+                fallbackPrompt:
+                    '${destination.name}, ${destination.region}, ${destination.country}, scenic travel destination landscape',
+                height: 300.h,
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
-            ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withAlpha(150)],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -98,7 +107,10 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               AnimatedContent(
                 duration: const Duration(milliseconds: 800),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 8.h,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -108,12 +120,18 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                           borderRadius: BorderRadius.circular(20.r),
                         ),
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                           onPressed: () => Navigator.pop(context),
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12.w,
+                          vertical: 6.h,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withAlpha(50),
                           borderRadius: BorderRadius.circular(20.r),
@@ -180,7 +198,11 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                             // Trip dates
                             Row(
                               children: [
-                                Icon(Icons.calendar_today, size: 18.sp, color: Colors.grey[600]),
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 18.sp,
+                                  color: Colors.grey[600],
+                                ),
                                 SizedBox(width: 8.w),
                                 Text(
                                   'September 11 - September 18',
@@ -218,10 +240,10 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                           children: [
                             // Overview tab
                             _buildOverviewTab(destination),
-                            
+
                             // Trip plan tab
                             _buildTripPlanTab(destination),
-                            
+
                             // Budget tab
                             _buildBudgetTab(destination),
                           ],
@@ -256,7 +278,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ),
             ),
             SizedBox(height: 12.h),
-            
+
             // Flight info
             Row(
               children: [
@@ -266,20 +288,21 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                     color: Colors.blue[50],
                     borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: Icon(Icons.flight, color: Colors.blue[400], size: 20.sp),
+                  child: Icon(
+                    Icons.flight,
+                    color: Colors.blue[400],
+                    size: 20.sp,
+                  ),
                 ),
                 SizedBox(width: 12.w),
                 Text(
                   'Your flight is Garuda Indonesia',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.black87,
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.black87),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
-            
+
             // Trip description
             Text(
               'You will take part in a one-week trip service with full service lodging, transportation and logistics availability that will fulfill your trip, of course, guided by a getprofessional tour guide.',
@@ -290,7 +313,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ),
             ),
             SizedBox(height: 24.h),
-            
+
             // Trip section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -316,7 +339,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ],
             ),
             SizedBox(height: 8.h),
-            
+
             Text(
               'There are 14 tourist destinations in the klaten area and you will visit them for one week.',
               style: TextStyle(
@@ -326,7 +349,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ),
             ),
             SizedBox(height: 16.h),
-            
+
             // Destination cards
             SizedBox(
               height: 180.h,
@@ -352,7 +375,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ),
             ),
             SizedBox(height: 24.h),
-            
+
             // Travelers section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -378,7 +401,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ],
             ),
             SizedBox(height: 16.h),
-            
+
             // Traveler avatars
             Row(
               children: List.generate(
@@ -410,40 +433,32 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Day 1
-            _buildDaySection(
-              'Day 1',
-              'Thursday, 11 Sept 2022',
-              [
-                _buildTripActivity(
-                  'Kebun pink',
-                  'Klaten central java',
-                  'Tour around on horseback and get to know the culture of the local people in a traditional way.',
-                  'https://images.unsplash.com/photo-1570168007204-dfb528c6958f',
-                ),
-                _buildTripActivity(
-                  'Siwalan bogor',
-                  'Klaten central java',
-                  'A tour of the palm plantation, of course, by trying the taste of the palm fruit that is directly picked from the tree.',
-                  'https://images.unsplash.com/photo-1566375638485-1c181e0c3720',
-                ),
-              ],
-            ),
-            
+            _buildDaySection('Day 1', 'Thursday, 11 Sept 2022', [
+              _buildTripActivity(
+                'Kebun pink',
+                'Klaten central java',
+                'Tour around on horseback and get to know the culture of the local people in a traditional way.',
+                'https://images.unsplash.com/photo-1570168007204-dfb528c6958f',
+              ),
+              _buildTripActivity(
+                'Siwalan bogor',
+                'Klaten central java',
+                'A tour of the palm plantation, of course, by trying the taste of the palm fruit that is directly picked from the tree.',
+                'https://images.unsplash.com/photo-1566375638485-1c181e0c3720',
+              ),
+            ]),
+
             SizedBox(height: 24.h),
-            
+
             // Day 2
-            _buildDaySection(
-              'Day 2',
-              'Thursday, 12 Sept 2022',
-              [
-                _buildTripActivity(
-                  'Candinan',
-                  'Klaten central java',
-                  'Tourism is a tour of the relics of the Hindu-Buddhist religious temples in the Klaten area.',
-                  'https://images.unsplash.com/photo-1537996194471-e657df975ab4',
-                ),
-              ],
-            ),
+            _buildDaySection('Day 2', 'Thursday, 12 Sept 2022', [
+              _buildTripActivity(
+                'Candinan',
+                'Klaten central java',
+                'Tourism is a tour of the relics of the Hindu-Buddhist religious temples in the Klaten area.',
+                'https://images.unsplash.com/photo-1537996194471-e657df975ab4',
+              ),
+            ]),
           ],
         ),
       ),
@@ -492,7 +507,9 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                   LinearProgressIndicator(
                     value: 0.7,
                     backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppTheme.primaryColor,
+                    ),
                   ),
                   SizedBox(height: 8.h),
                   Row(
@@ -518,29 +535,51 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
               ),
             ),
             SizedBox(height: 24.h),
-            
+
             // Expense categories
             Text(
               'Expense Categories',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.h),
-            
-            _buildExpenseCategory('Transportation', '₹${(destination.price * 1.2).toStringAsFixed(2)}', 0.3, Colors.blue),
+
+            _buildExpenseCategory(
+              'Transportation',
+              '₹${(destination.price * 1.2).toStringAsFixed(2)}',
+              0.3,
+              Colors.blue,
+            ),
             SizedBox(height: 12.h),
-            _buildExpenseCategory('Accommodation', '₹${(destination.price * 1.5).toStringAsFixed(2)}', 0.4, Colors.orange),
+            _buildExpenseCategory(
+              'Accommodation',
+              '₹${(destination.price * 1.5).toStringAsFixed(2)}',
+              0.4,
+              Colors.orange,
+            ),
             SizedBox(height: 12.h),
-            _buildExpenseCategory('Food & Drinks', '₹${(destination.price * 0.8).toStringAsFixed(2)}', 0.2, Colors.green),
+            _buildExpenseCategory(
+              'Food & Drinks',
+              '₹${(destination.price * 0.8).toStringAsFixed(2)}',
+              0.2,
+              Colors.green,
+            ),
             SizedBox(height: 12.h),
-            _buildExpenseCategory('Activities', '₹${(destination.price * 0.5).toStringAsFixed(2)}', 0.1, Colors.purple),
+            _buildExpenseCategory(
+              'Activities',
+              '₹${(destination.price * 0.5).toStringAsFixed(2)}',
+              0.1,
+              Colors.purple,
+            ),
             SizedBox(height: 12.h),
-            _buildExpenseCategory('Shopping', '₹${(destination.price * 0.3).toStringAsFixed(2)}', 0.05, Colors.red),
-            
+            _buildExpenseCategory(
+              'Shopping',
+              '₹${(destination.price * 0.3).toStringAsFixed(2)}',
+              0.05,
+              Colors.red,
+            ),
+
             SizedBox(height: 24.h),
-            
+
             // Add expense button
             SizedBox(
               width: double.infinity,
@@ -589,14 +628,19 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                 topLeft: Radius.circular(12.r),
                 topRight: Radius.circular(12.r),
               ),
-              child: Image.network(
-                imageUrl,
+              child: AIImage(
+                imageUrl: imageUrl,
+                fallbackPrompt: '$name travel destination',
                 height: 100.h,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12.r),
+                  topRight: Radius.circular(12.r),
+                ),
               ),
             ),
-            
+
             // Details
             Padding(
               padding: EdgeInsets.all(12.w),
@@ -615,10 +659,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                   SizedBox(height: 4.h),
                   Text(
                     date,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -649,10 +690,7 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                 SizedBox(height: 4.h),
                 Text(
                   date,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -674,7 +712,12 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
     );
   }
 
-  Widget _buildTripActivity(String name, String location, String description, String imageUrl) {
+  Widget _buildTripActivity(
+    String name,
+    String location,
+    String description,
+    String imageUrl,
+  ) {
     return AnimatedContent(
       delay: const Duration(milliseconds: 500),
       slideBegin: const Offset(0.3, 0),
@@ -686,15 +729,17 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
             // Activity image
             ClipRRect(
               borderRadius: BorderRadius.circular(8.r),
-              child: Image.network(
-                imageUrl,
+              child: AIImage(
+                imageUrl: imageUrl,
+                fallbackPrompt: '$name $location travel activity',
                 width: 60.w,
                 height: 60.w,
                 fit: BoxFit.cover,
+                borderRadius: BorderRadius.circular(8.r),
               ),
             ),
             SizedBox(width: 12.w),
-            
+
             // Activity details
             Expanded(
               child: Column(
@@ -710,18 +755,12 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
                   SizedBox(height: 4.h),
                   Text(
                     location,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                   ),
                   SizedBox(height: 8.h),
                   Text(
                     description,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 14.sp, color: Colors.black87),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -734,7 +773,12 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
     );
   }
 
-  Widget _buildExpenseCategory(String category, String amount, double progress, Color color) {
+  Widget _buildExpenseCategory(
+    String category,
+    String amount,
+    double progress,
+    Color color,
+  ) {
     return AnimatedContent(
       delay: const Duration(milliseconds: 400),
       slideBegin: const Offset(0.3, 0),
@@ -746,17 +790,11 @@ class _DestinationDetailAnimatedState extends ConsumerState<DestinationDetailAni
             children: [
               Text(
                 category,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
               ),
               Text(
                 amount,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold),
               ),
             ],
           ),

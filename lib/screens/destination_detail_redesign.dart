@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:karnova/models/destination.dart';
 import 'package:karnova/services/api_service.dart';
 import 'package:karnova/utils/theme.dart';
+import 'package:karnova/widgets/ai_image.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
 
 // Provider for destination details
@@ -76,23 +77,29 @@ class _DestinationDetailScreenState
     return Stack(
       children: [
         // Background image with gradient overlay
-        Container(
+        SizedBox(
           height: 300.h,
           width: double.infinity,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(destination.image),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withAlpha(150)],
+          child: Stack(
+            children: [
+              AIImage(
+                imageUrl: destination.image,
+                fallbackPrompt:
+                    '${destination.name}, ${destination.region}, ${destination.country}, scenic travel destination landscape',
+                height: 300.h,
+                width: double.infinity,
+                fit: BoxFit.cover,
               ),
-            ),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withAlpha(150)],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -594,11 +601,16 @@ class _DestinationDetailScreenState
               topLeft: Radius.circular(12.r),
               topRight: Radius.circular(12.r),
             ),
-            child: Image.network(
-              imageUrl,
+            child: AIImage(
+              imageUrl: imageUrl,
+              fallbackPrompt: '$name travel destination',
               height: 100.h,
               width: double.infinity,
               fit: BoxFit.cover,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12.r),
+                topRight: Radius.circular(12.r),
+              ),
             ),
           ),
 
@@ -686,11 +698,13 @@ class _DestinationDetailScreenState
           // Activity image
           ClipRRect(
             borderRadius: BorderRadius.circular(8.r),
-            child: Image.network(
-              imageUrl,
+            child: AIImage(
+              imageUrl: imageUrl,
+              fallbackPrompt: '$name $location travel activity',
               width: 60.w,
               height: 60.w,
               fit: BoxFit.cover,
+              borderRadius: BorderRadius.circular(8.r),
             ),
           ),
           SizedBox(width: 12.w),

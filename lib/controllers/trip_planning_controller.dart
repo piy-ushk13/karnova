@@ -41,7 +41,7 @@ class TripPlanningController {
     required int travelers,
   }) async {
     int retryCount = 0;
-    const maxRetries = 2;
+    const maxRetries = 3; // Increased max retries for better chance of success
 
     while (retryCount <= maxRetries) {
       try {
@@ -49,6 +49,11 @@ class TripPlanningController {
         _ref.read(tripPlanningLoadingProvider.notifier).state = true;
         // Clear any previous errors
         _ref.read(tripPlanningErrorProvider.notifier).state = null;
+
+        if (kDebugMode) {
+          print('Generating itinerary (attempt ${retryCount + 1})');
+          print('From: $fromLocation, To: $location, Budget: ₹$budget');
+        }
 
         // Generate the itinerary
         final itinerary = await _repository.generateItinerary(
@@ -64,6 +69,15 @@ class TripPlanningController {
         // Validate the itinerary has required data
         if (itinerary.dailyItineraries.isEmpty) {
           throw Exception("Generated itinerary has no daily plans");
+        }
+
+        if (kDebugMode) {
+          print(
+            'Successfully generated itinerary with ${itinerary.dailyItineraries.length} days',
+          );
+          print(
+            'First day has ${itinerary.dailyItineraries.first.activities.length} activities',
+          );
         }
 
         // Update the generated itinerary provider
@@ -91,10 +105,18 @@ class TripPlanningController {
         if (retryCount == maxRetries) {
           // Set error message
           _ref.read(tripPlanningErrorProvider.notifier).state =
-              'Failed to generate itinerary. Please try again.';
+              'Failed to generate itinerary. Please check your internet connection and try again.';
+
+          // Show a more detailed error in debug mode
+          if (kDebugMode) {
+            print('All retry attempts failed. Last error: $e');
+          }
         } else {
           // Otherwise, increment the retry count and try again
           retryCount++;
+
+          // Add a small delay between retries to avoid rate limiting
+          await Future.delayed(Duration(seconds: 1));
           continue;
         }
       } finally {

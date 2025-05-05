@@ -77,6 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final popularPlaces = ref.watch(popularPlacesProvider);
+    final popularTours = ref.watch(popularToursProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -303,7 +304,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13),
+            color: Colors.black.withValues(
+              red: 0,
+              green: 0,
+              blue: 0,
+              alpha: 13,
+            ),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -361,7 +367,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13),
+            color: Colors.black.withValues(
+              red: 0,
+              green: 0,
+              blue: 0,
+              alpha: 13,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -457,7 +468,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(13),
+              color: Colors.black.withValues(
+                red: 0,
+                green: 0,
+                blue: 0,
+                alpha: 13,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -519,7 +535,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(13),
+            color: Colors.black.withValues(
+              red: 0,
+              green: 0,
+              blue: 0,
+              alpha: 13,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),

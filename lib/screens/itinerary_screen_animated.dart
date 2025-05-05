@@ -1,14 +1,17 @@
 // Augment: TripOnBuddy Website → Flutter App
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:karnova/controllers/trip_planning_controller.dart';
 import 'package:karnova/models/itinerary_detail.dart';
 import 'package:karnova/utils/theme.dart';
 import 'package:karnova/widgets/animated_content.dart';
 import 'package:karnova/widgets/custom_bottom_navbar.dart';
 import 'package:karnova/widgets/itinerary_map.dart';
+import 'package:karnova/widgets/loading_overlay.dart';
 import 'package:karnova/widgets/tips_banner.dart';
 
 import 'package:karnova/repositories/trip_planning_repository.dart';
@@ -24,11 +27,23 @@ final itinerariesProvider = Provider<List<ItineraryDetail>>((ref) {
   // Add the generated itinerary if available
   if (generatedItinerary != null) {
     itineraries.add(generatedItinerary);
+
+    // Log that we're using a real generated itinerary
+    if (kDebugMode) {
+      print('Using real generated itinerary: ${generatedItinerary.title}');
+      print('Number of days: ${generatedItinerary.dailyItineraries.length}');
+      print(
+        'Number of activities on day 1: ${generatedItinerary.dailyItineraries.first.activities.length}',
+      );
+    }
   }
 
   // If no itineraries are available, add a default mock itinerary
   // This ensures we always have at least one itinerary to display
   if (itineraries.isEmpty) {
+    if (kDebugMode) {
+      print('No generated itinerary available, using mock itinerary');
+    }
     itineraries.add(ItineraryDetail.getMumbaiItinerary());
   }
 
@@ -63,69 +78,104 @@ class _ItineraryScreenAnimatedState
   @override
   Widget build(BuildContext context) {
     final itineraries = ref.watch(itinerariesProvider);
+    final isLoading = ref.watch(tripPlanningLoadingProvider);
+    final errorMessage = ref.watch(tripPlanningErrorProvider);
+    final successMessage = ref.watch(tripPlanningSuccessProvider);
+
+    // Show success message if available
+    if (successMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
+    }
+
+    // Show error message if available
+    if (errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      });
+    }
 
     // We'll always show the itinerary screen, regardless of confirmation status
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Your Itinerary',
-          style: GoogleFonts.playfairDisplay(
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+    return LoadingOverlay(
+      isLoading: isLoading,
+      message: 'Please wait a few seconds while we generate your itinerary...',
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Your Itinerary',
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
-        ),
-        actions: [
-          // Edit Trip Button
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: 'Edit Trip',
-            onPressed: () {
-              if (_tabController.index == 0 && itineraries.isNotEmpty) {
-                _showEditTripDialog(context, itineraries[0]);
-              } else {
+          actions: [
+            // Edit Trip Button
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Edit Trip',
+              onPressed: () {
+                if (_tabController.index == 0 && itineraries.isNotEmpty) {
+                  _showEditTripDialog(context, itineraries[0]);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No trips to edit'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              },
+            ),
+            // Share Button
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'Share Itinerary',
+              onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('No trips to edit'),
-                    backgroundColor: Colors.orange,
+                    content: Text('Share functionality coming soon!'),
                   ),
                 );
-              }
-            },
-          ),
-          // Share Button
-          IconButton(
-            icon: const Icon(Icons.share),
-            tooltip: 'Share Itinerary',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Share functionality coming soon!'),
-                ),
-              );
-            },
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primaryColor,
-          unselectedLabelColor: Colors.grey[600],
-          indicatorColor: AppTheme.primaryColor,
-          tabs: const [Tab(text: 'Upcoming Trips'), Tab(text: 'Past Trips')],
-        ),
-      ),
-      bottomNavigationBar: const CustomBottomNavbar(currentRoute: '/itinerary'),
-      body: SafeArea(
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            // Upcoming Trips Tab
-            itineraries.isEmpty
-                ? _buildEmptyTripsView(isUpcoming: true)
-                : _buildUpcomingTripsTab(itineraries[0]),
-
-            // Past Trips Tab
-            _buildPastTripsTab(),
+              },
+            ),
           ],
+          bottom: TabBar(
+            controller: _tabController,
+            labelColor: AppTheme.primaryColor,
+            unselectedLabelColor: Colors.grey[600],
+            indicatorColor: AppTheme.primaryColor,
+            tabs: const [Tab(text: 'Upcoming Trips'), Tab(text: 'Past Trips')],
+          ),
+        ),
+        bottomNavigationBar: const CustomBottomNavbar(
+          currentRoute: '/itinerary',
+        ),
+        body: SafeArea(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              // Upcoming Trips Tab
+              itineraries.isEmpty
+                  ? _buildEmptyTripsView(isUpcoming: true)
+                  : _buildUpcomingTripsTab(itineraries[0]),
+
+              // Past Trips Tab
+              _buildPastTripsTab(),
+            ],
+          ),
         ),
       ),
     );
@@ -309,7 +359,7 @@ class _ItineraryScreenAnimatedState
                         indicatorColor: AppTheme.primaryColor,
                         tabs: const [
                           Tab(text: 'Daily Itinerary'),
-                          Tab(text: 'Mumbai Tour'),
+                          Tab(text: 'Trip Map'),
                         ],
                       ),
                       SizedBox(
@@ -317,7 +367,7 @@ class _ItineraryScreenAnimatedState
                         child: TabBarView(
                           children: [
                             _buildDailyItineraryTab(itinerary),
-                            _buildMumbaiTourTab(),
+                            _buildItineraryMapTab(itinerary),
                           ],
                         ),
                       ),
@@ -870,86 +920,52 @@ class _ItineraryScreenAnimatedState
     );
   }
 
-  // Helper method to build Mumbai tour tab
-  Widget _buildMumbaiTourTab() {
+  // Helper method to build itinerary map tab
+  Widget _buildItineraryMapTab(ItineraryDetail itinerary) {
+    if (kDebugMode) {
+      print('Building itinerary map for ${itinerary.title}');
+      print('Number of days: ${itinerary.dailyItineraries.length}');
+      print(
+        'Number of activities on day 1: ${itinerary.dailyItineraries.first.activities.length}',
+      );
+    }
+
     return AnimatedContent(
       delay: const Duration(milliseconds: 800),
-      child: GridView.builder(
-        padding: EdgeInsets.all(8.w),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 1.0,
-          crossAxisSpacing: 8.w,
-          mainAxisSpacing: 8.h,
-        ),
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          final attractions = [
-            'Gateway of India',
-            'Marine Drive',
-            'Elephanta Caves',
-            'Chhatrapati Shivaji Terminus',
-            'Juhu Beach',
-            'Sanjay Gandhi National Park',
-          ];
-
-          return AnimatedContent(
-            delay: Duration(milliseconds: 900 + (index * 100)),
-            slideBegin: const Offset(0.0, 0.5),
-            child: Card(
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Placeholder image
-                  Container(
-                    color: Colors.grey[300],
-                    child: Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 40.sp,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                  ),
-                  // Gradient overlay
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withAlpha(179),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Caption
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    right: 12,
-                    child: Text(
-                      attractions[index],
-                      style: GoogleFonts.roboto(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14.sp,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Text(
+              'Trip Map',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-          );
-        },
+          ),
+          Expanded(
+            child: ItineraryMap(
+              destination:
+                  itinerary.title.split(
+                    ' ',
+                  )[1], // Extract destination from title
+              activities:
+                  itinerary.dailyItineraries
+                      .expand((day) => day.activities)
+                      .map(
+                        (activity) => activity.title,
+                      ) // Use title instead of location
+                      .toList(),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // This method has been replaced by _buildItineraryMapTab
+  // Keeping the comment for documentation purposes
 }

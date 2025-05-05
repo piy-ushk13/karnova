@@ -19,6 +19,14 @@ class AppTheme {
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color dividerColor = Color(0xFFE5E7EB);
 
+  // Gradient colors
+  static const Color gradientStart = Color(
+    0xFFE6EFFF,
+  ); // Light blue gradient start
+  static const Color gradientEnd = Color(
+    0xFFF0E6FF,
+  ); // Light lavender gradient end
+
   // Text colors
   static const Color textPrimaryColor = Colors.black;
   static const Color textSecondaryColor = Colors.black87;

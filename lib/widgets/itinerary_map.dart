@@ -6,12 +6,19 @@ import 'package:karnova/models/itinerary_detail.dart';
 import 'package:karnova/utils/theme.dart';
 
 class ItineraryMap extends StatefulWidget {
-  final DailyItinerary dailyItinerary;
-  
+  final DailyItinerary? dailyItinerary;
+  final String? destination;
+  final List<String>? activities;
+
   const ItineraryMap({
     super.key,
-    required this.dailyItinerary,
-  });
+    this.dailyItinerary,
+    this.destination,
+    this.activities,
+  }) : assert(
+         dailyItinerary != null || (destination != null && activities != null),
+         'Either dailyItinerary or both destination and activities must be provided',
+       );
 
   @override
   State<ItineraryMap> createState() => _ItineraryMapState();
@@ -20,9 +27,20 @@ class ItineraryMap extends StatefulWidget {
 class _ItineraryMapState extends State<ItineraryMap> {
   // This would normally use a real map provider like Google Maps
   // For this demo, we'll create a simulated map view
-  
+
   @override
   Widget build(BuildContext context) {
+    // Determine if we're using dailyItinerary or custom activities
+    final bool usingDailyItinerary = widget.dailyItinerary != null;
+    final List<Activity> activitiesToShow =
+        usingDailyItinerary
+            ? widget.dailyItinerary!.activities
+            : _createActivitiesFromStrings(widget.activities!);
+
+    if (activitiesToShow.isEmpty) {
+      return Center(child: Text('No activities to display on map'));
+    }
+
     return Container(
       height: 250.h,
       decoration: BoxDecoration(
@@ -37,31 +55,59 @@ class _ItineraryMapState extends State<ItineraryMap> {
             borderRadius: BorderRadius.circular(12.r),
             child: _buildSimulatedMap(),
           ),
-          
+
+          // Title of the map
+          Positioned(
+            top: 10.h,
+            left: 10.w,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(230),
+                borderRadius: BorderRadius.circular(4.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(26),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Text(
+                usingDailyItinerary
+                    ? 'Day ${widget.dailyItinerary!.day} Map'
+                    : '${widget.destination} Trip Map',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+          ),
+
           // Route path
           CustomPaint(
             size: Size(double.infinity, 250.h),
-            painter: RoutePainter(
-              activities: widget.dailyItinerary.activities,
-            ),
+            painter: RoutePainter(activities: activitiesToShow),
           ),
-          
+
           // Location markers
-          ...widget.dailyItinerary.activities.asMap().entries.map((entry) {
+          ...activitiesToShow.asMap().entries.map((entry) {
             final index = entry.key;
             final activity = entry.value;
-            
+
             // Calculate position (for demo purposes)
             final xPosition = 20.w + (index * 60.w);
             final yPosition = 50.h + (index % 3 * 60.h);
-            
+
             return Positioned(
               left: xPosition,
               top: yPosition,
               child: _buildMarker(index + 1, activity),
             );
           }),
-          
+
           // Map controls (simulated)
           Positioned(
             right: 10.w,
@@ -76,7 +122,7 @@ class _ItineraryMapState extends State<ItineraryMap> {
               ],
             ),
           ),
-          
+
           // Map attribution
           Positioned(
             left: 10.w,
@@ -84,15 +130,12 @@ class _ItineraryMapState extends State<ItineraryMap> {
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withAlpha(204),
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
                 'Map data © TripOnBuddy',
-                style: TextStyle(
-                  fontSize: 10.sp,
-                  color: Colors.grey[700],
-                ),
+                style: TextStyle(fontSize: 10.sp, color: Colors.grey[700]),
               ),
             ),
           ),
@@ -100,7 +143,7 @@ class _ItineraryMapState extends State<ItineraryMap> {
       ),
     );
   }
-  
+
   Widget _buildSimulatedMap() {
     // This is a placeholder for a real map
     // In a real app, you would use a map provider like Google Maps
@@ -112,7 +155,7 @@ class _ItineraryMapState extends State<ItineraryMap> {
       ),
     );
   }
-  
+
   Widget _buildMarker(int number, Activity activity) {
     return Column(
       children: [
@@ -126,7 +169,7 @@ class _ItineraryMapState extends State<ItineraryMap> {
             border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
+                color: Colors.black.withAlpha(51),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -143,7 +186,7 @@ class _ItineraryMapState extends State<ItineraryMap> {
             ),
           ),
         ),
-        
+
         // Activity name tooltip on hover
         Tooltip(
           message: '${activity.time}: ${activity.title}',
@@ -155,27 +198,24 @@ class _ItineraryMapState extends State<ItineraryMap> {
               borderRadius: BorderRadius.circular(4.r),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withAlpha(26),
                   blurRadius: 2,
                   offset: const Offset(0, 1),
                 ),
               ],
             ),
             child: Text(
-              activity.title.length > 10 
-                  ? '${activity.title.substring(0, 10)}...' 
+              activity.title.length > 10
+                  ? '${activity.title.substring(0, 10)}...'
                   : activity.title,
-              style: TextStyle(
-                fontSize: 10.sp,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w500),
             ),
           ),
         ),
       ],
     );
   }
-  
+
   Widget _buildMapControl(IconData icon, VoidCallback onPressed) {
     return Container(
       width: 36.w,
@@ -185,7 +225,7 @@ class _ItineraryMapState extends State<ItineraryMap> {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withAlpha(26),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -199,67 +239,83 @@ class _ItineraryMapState extends State<ItineraryMap> {
       ),
     );
   }
+
+  // Helper method to create Activity objects from string locations
+  List<Activity> _createActivitiesFromStrings(List<String> locationStrings) {
+    return locationStrings.asMap().entries.map((entry) {
+      final index = entry.key;
+      final location = entry.value;
+
+      // Create a simple activity with the location as the title
+      return Activity(
+        title: location,
+        time: '${9 + index}:00', // Generate sequential times starting at 9 AM
+        description: 'Visit $location',
+        cost: 1000, // Default cost
+      );
+    }).toList();
+  }
 }
 
 // Custom painter for the route path
 class RoutePainter extends CustomPainter {
   final List<Activity> activities;
-  
+
   RoutePainter({required this.activities});
-  
+
   @override
   void paint(Canvas canvas, Size size) {
     if (activities.isEmpty) return;
-    
-    final paint = Paint()
-      ..color = AppTheme.primaryColor
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    
-    final dashPaint = Paint()
-      ..color = AppTheme.primaryColor
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    
+
+    final paint =
+        Paint()
+          ..color = AppTheme.primaryColor
+          ..strokeWidth = 3
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke;
+
     final path = Path();
-    
+
     // Create points for each activity (for demo purposes)
-    final points = activities.asMap().entries.map((entry) {
-      final index = entry.key;
-      final xPosition = 20.w + (index * 60.w) + 15.w; // Center of marker
-      final yPosition = 50.h + (index % 3 * 60.h) + 15.h; // Center of marker
-      return Offset(xPosition, yPosition);
-    }).toList();
-    
+    final points =
+        activities.asMap().entries.map((entry) {
+          final index = entry.key;
+          final xPosition = 20.w + (index * 60.w) + 15.w; // Center of marker
+          final yPosition =
+              50.h + (index % 3 * 60.h) + 15.h; // Center of marker
+          return Offset(xPosition, yPosition);
+        }).toList();
+
     // Draw path connecting all points
     if (points.isNotEmpty) {
       path.moveTo(points.first.dx, points.first.dy);
-      
+
       for (int i = 1; i < points.length; i++) {
         // Draw a curved path between points
         final prevPoint = points[i - 1];
         final currentPoint = points[i];
-        
+
         // Control points for the curve
         final controlPoint1 = Offset(
           prevPoint.dx + (currentPoint.dx - prevPoint.dx) / 2,
           prevPoint.dy,
         );
-        
+
         final controlPoint2 = Offset(
           prevPoint.dx + (currentPoint.dx - prevPoint.dx) / 2,
           currentPoint.dy,
         );
-        
+
         path.cubicTo(
-          controlPoint1.dx, controlPoint1.dy,
-          controlPoint2.dx, controlPoint2.dy,
-          currentPoint.dx, currentPoint.dy,
+          controlPoint1.dx,
+          controlPoint1.dy,
+          controlPoint2.dx,
+          controlPoint2.dy,
+          currentPoint.dx,
+          currentPoint.dy,
         );
       }
-      
+
       canvas.drawPath(path, paint);
     }
   }
@@ -273,79 +329,89 @@ class SimulatedMapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Draw some simulated roads
-    final roadPaint = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
-    
-    final secondaryRoadPaint = Paint()
-      ..color = Colors.white.withOpacity(0.7)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    
+    final roadPaint =
+        Paint()
+          ..color = Colors.white
+          ..strokeWidth = 3
+          ..style = PaintingStyle.stroke;
+
+    final secondaryRoadPaint =
+        Paint()
+          ..color = Colors.white.withAlpha(179)
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke;
+
     // Main roads
-    final mainRoad1 = Path()
-      ..moveTo(0, size.height * 0.3)
-      ..lineTo(size.width, size.height * 0.3);
-    
-    final mainRoad2 = Path()
-      ..moveTo(size.width * 0.2, 0)
-      ..lineTo(size.width * 0.2, size.height);
-    
-    final mainRoad3 = Path()
-      ..moveTo(size.width * 0.6, 0)
-      ..lineTo(size.width * 0.6, size.height);
-    
+    final mainRoad1 =
+        Path()
+          ..moveTo(0, size.height * 0.3)
+          ..lineTo(size.width, size.height * 0.3);
+
+    final mainRoad2 =
+        Path()
+          ..moveTo(size.width * 0.2, 0)
+          ..lineTo(size.width * 0.2, size.height);
+
+    final mainRoad3 =
+        Path()
+          ..moveTo(size.width * 0.6, 0)
+          ..lineTo(size.width * 0.6, size.height);
+
     // Secondary roads
-    final secondaryRoad1 = Path()
-      ..moveTo(0, size.height * 0.6)
-      ..lineTo(size.width, size.height * 0.6);
-    
-    final secondaryRoad2 = Path()
-      ..moveTo(size.width * 0.4, 0)
-      ..lineTo(size.width * 0.4, size.height);
-    
-    final secondaryRoad3 = Path()
-      ..moveTo(size.width * 0.8, 0)
-      ..lineTo(size.width * 0.8, size.height);
-    
+    final secondaryRoad1 =
+        Path()
+          ..moveTo(0, size.height * 0.6)
+          ..lineTo(size.width, size.height * 0.6);
+
+    final secondaryRoad2 =
+        Path()
+          ..moveTo(size.width * 0.4, 0)
+          ..lineTo(size.width * 0.4, size.height);
+
+    final secondaryRoad3 =
+        Path()
+          ..moveTo(size.width * 0.8, 0)
+          ..lineTo(size.width * 0.8, size.height);
+
     // Draw blocks (buildings)
-    final blockPaint = Paint()
-      ..color = Colors.grey[300]!
-      ..style = PaintingStyle.fill;
-    
+    final blockPaint =
+        Paint()
+          ..color = Colors.grey[300]!
+          ..style = PaintingStyle.fill;
+
     // Draw some random blocks to simulate buildings
     for (int i = 0; i < 20; i++) {
       final left = (i * 30) % size.width;
       final top = ((i * 40) % size.height);
       final blockSize = 20.0 + (i % 5) * 5;
-      
+
       canvas.drawRect(
         Rect.fromLTWH(left, top, blockSize, blockSize),
         blockPaint,
       );
     }
-    
+
     // Draw roads on top of blocks
     canvas.drawPath(mainRoad1, roadPaint);
     canvas.drawPath(mainRoad2, roadPaint);
     canvas.drawPath(mainRoad3, roadPaint);
-    
+
     canvas.drawPath(secondaryRoad1, secondaryRoadPaint);
     canvas.drawPath(secondaryRoad2, secondaryRoadPaint);
     canvas.drawPath(secondaryRoad3, secondaryRoadPaint);
-    
+
     // Draw some green areas (parks)
-    final parkPaint = Paint()
-      ..color = Colors.green[100]!
-      ..style = PaintingStyle.fill;
-    
+    final parkPaint =
+        Paint()
+          ..color = Colors.green[100]!
+          ..style = PaintingStyle.fill;
+
     canvas.drawCircle(
       Offset(size.width * 0.3, size.height * 0.4),
       30,
       parkPaint,
     );
-    
+
     canvas.drawCircle(
       Offset(size.width * 0.7, size.height * 0.7),
       25,

@@ -23,9 +23,11 @@ class BudgetSlider extends StatelessWidget {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: Theme.of(context).colorScheme.primary,
-            inactiveTrackColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            inactiveTrackColor: Theme.of(
+              context,
+            ).colorScheme.primary.withAlpha(51),
             thumbColor: Theme.of(context).colorScheme.primary,
-            overlayColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            overlayColor: Theme.of(context).colorScheme.primary.withAlpha(51),
             trackHeight: 8.h,
             thumbShape: RoundSliderThumbShape(enabledThumbRadius: 12.r),
             overlayShape: RoundSliderOverlayShape(overlayRadius: 20.r),

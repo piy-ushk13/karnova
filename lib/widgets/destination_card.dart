@@ -1,10 +1,12 @@
 // Augment: TripOnBuddy Website → Flutter App
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:karnova/models/destination.dart';
 import 'package:karnova/utils/theme.dart';
+import 'package:karnova/widgets/ai_image.dart';
 
-class DestinationCard extends StatelessWidget {
+class DestinationCard extends ConsumerWidget {
   final Destination destination;
   final VoidCallback onTap;
 
@@ -15,7 +17,7 @@ class DestinationCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
@@ -33,21 +35,15 @@ class DestinationCard extends StatelessWidget {
               ),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
-                child: Image.network(
-                  destination.image,
+                child: AIImage(
+                  imageUrl: destination.image,
+                  fallbackPrompt:
+                      '${destination.name}, ${destination.region}, ${destination.country}, travel destination',
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: AppTheme.dividerColor,
-                      child: Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: 40.sp,
-                          color: AppTheme.textSecondaryColor,
-                        ),
-                      ),
-                    );
-                  },
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12.r),
+                    topRight: Radius.circular(12.r),
+                  ),
                 ),
               ),
             ),

@@ -15,10 +15,10 @@ final popularPlacesProvider = FutureProvider<List<Destination>>((ref) async {
 
     // Fetch all destinations
     final destinations = await apiService.getDestinations();
-    
+
     // Sort by rating to get the most popular ones
     destinations.sort((a, b) => b.rating.compareTo(a.rating));
-    
+
     // Return top destinations
     return destinations.take(6).toList();
   } catch (e) {
@@ -85,7 +85,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           children: [
             SizedBox(height: 16.h),
-            
+
             // Header with title and profile button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,16 +117,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     color: Colors.blue[100],
                     borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.blue,
-                    size: 20.sp,
-                  ),
+                  child: Icon(Icons.person, color: Colors.blue, size: 20.sp),
                 ),
               ],
             ),
             SizedBox(height: 24.h),
-            
+
             // Search bar
             Container(
               decoration: BoxDecoration(
@@ -156,7 +152,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             SizedBox(height: 16.h),
-            
+
             // Category chips
             SizedBox(
               height: 40.h,
@@ -171,7 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             SizedBox(height: 24.h),
-            
+
             // Featured destination card
             popularPlaces.when(
               data: (places) {
@@ -184,7 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               error: (_, __) => const SizedBox.shrink(),
             ),
             SizedBox(height: 24.h),
-            
+
             // Hot places section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -199,30 +195,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                     SizedBox(width: 4.w),
-                    Icon(Icons.local_fire_department, color: Colors.orange, size: 20.sp),
+                    Icon(
+                      Icons.local_fire_department,
+                      color: Colors.orange,
+                      size: 20.sp,
+                    ),
                   ],
                 ),
                 TextButton(
                   onPressed: () => context.go('/destinations'),
                   child: Text(
                     'See all',
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 14.sp,
-                    ),
+                    style: TextStyle(color: Colors.grey[700], fontSize: 14.sp),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
-            
+
             // Hot places grid
             popularPlaces.when(
               data: (places) {
                 if (places.isEmpty) {
                   return const Center(child: Text('No places available'));
                 }
-                
+
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -242,7 +239,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               error: (_, __) => const SizedBox.shrink(),
             ),
             SizedBox(height: 24.h),
-            
+
             // Featured trips section
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -258,16 +255,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onPressed: () {},
                   child: Text(
                     'See all',
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 14.sp,
-                    ),
+                    style: TextStyle(color: Colors.grey[700], fontSize: 14.sp),
                   ),
                 ),
               ],
             ),
             SizedBox(height: 16.h),
-            
+
             // Featured trips list
             popularTours.when(
               data: (tours) {
@@ -277,13 +271,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 return Column(
                   children: [
-                    if (tours.isNotEmpty) _buildTripItem('Vespa Tour', 'Rome, Italy'),
+                    if (tours.isNotEmpty)
+                      _buildTripItem('Vespa Tour', 'Rome, Italy'),
                     SizedBox(height: 12.h),
-                    if (tours.length > 1) _buildTripItem('Yoga retreat', 'Bali, Indonesia'),
+                    if (tours.length > 1)
+                      _buildTripItem('Yoga retreat', 'Bali, Indonesia'),
                     SizedBox(height: 12.h),
-                    if (tours.length > 2) _buildTripItem('Oktoberfest', 'Munich, Germany'),
+                    if (tours.length > 2)
+                      _buildTripItem('Oktoberfest', 'Munich, Germany'),
                     SizedBox(height: 12.h),
-                    if (tours.length > 3) _buildTripItem('Brooklyn Bridge', 'New York City, USA'),
+                    if (tours.length > 3)
+                      _buildTripItem('Brooklyn Bridge', 'New York City, USA'),
                   ],
                 );
               },
@@ -296,7 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildCustomBottomNavigationBar() {
     return Container(
       height: 60.h,
@@ -304,7 +302,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(
+              red: 0,
+              green: 0,
+              blue: 0,
+              alpha: 13,
+            ),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -321,7 +324,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildNavBarItem(IconData icon, bool isSelected) {
     return IconButton(
       icon: Icon(
@@ -334,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       },
     );
   }
-  
+
   Widget _buildCategoryChip(String label, {bool isSelected = false}) {
     return Container(
       margin: EdgeInsets.only(right: 8.w),
@@ -353,7 +356,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildFeaturedDestinationCard(Destination destination) {
     return Container(
       height: 220.h,
@@ -362,7 +365,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(
+              red: 0,
+              green: 0,
+              blue: 0,
+              alpha: 13,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -404,7 +412,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ],
             ),
           ),
-          
+
           // Details
           Padding(
             padding: EdgeInsets.all(12.w),
@@ -423,11 +431,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 16.sp,
-                        ),
+                        Icon(Icons.star, color: Colors.amber, size: 16.sp),
                         SizedBox(width: 4.w),
                         Text(
                           destination.rating.toString(),
@@ -443,10 +447,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   '${destination.region}, ${destination.country}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -455,7 +456,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildHotPlaceCard(Destination place) {
     return GestureDetector(
       onTap: () => context.go('/detail/${place.id}'),
@@ -465,7 +466,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(
+                red: 0,
+                green: 0,
+                blue: 0,
+                alpha: 13,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -487,7 +493,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-            
+
             // Details
             Padding(
               padding: EdgeInsets.all(8.w),
@@ -506,10 +512,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SizedBox(height: 2.h),
                   Text(
                     '${place.region}, ${place.country}',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -521,7 +524,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildTripItem(String title, String location) {
     return Container(
       padding: EdgeInsets.all(12.w),
@@ -530,7 +533,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(
+              red: 0,
+              green: 0,
+              blue: 0,
+              alpha: 13,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -553,7 +561,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
           SizedBox(width: 12.w),
-          
+
           // Trip details
           Expanded(
             child: Column(
@@ -569,15 +577,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 SizedBox(height: 4.h),
                 Text(
                   location,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
-          
+
           // Arrow button
           Container(
             padding: EdgeInsets.all(8.r),
@@ -585,107 +590,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: Colors.amber,
               borderRadius: BorderRadius.circular(8.r),
             ),
-            child: Icon(
-              Icons.arrow_forward,
-              color: Colors.white,
-              size: 16.sp,
-            ),
+            child: Icon(Icons.arrow_forward, color: Colors.white, size: 16.sp),
           ),
         ],
       ),
     );
   }
-  
+
   void _showPlanTripDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Plan Your Trip'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'From',
-                  hintText: 'Your starting point',
-                  prefixIcon: const Icon(Icons.flight_takeoff),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'To',
-                  hintText: 'Your destination',
-                  prefixIcon: const Icon(Icons.flight_land),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-              ),
-              SizedBox(height: 16.h),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Date',
-                  hintText: 'When do you want to travel?',
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                ),
-                readOnly: true,
-                onTap: () async {
-                  await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now().add(
-                      const Duration(days: 1),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Plan Your Trip'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'From',
+                      hintText: 'Your starting point',
+                      prefixIcon: const Icon(Icons.flight_takeoff),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                     ),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  // Handle date selection
-                },
-              ),
-              SizedBox(height: 16.h),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Budget',
-                  hintText: 'Your budget in ₹',
-                  prefixIcon: const Icon(Icons.account_balance_wallet),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
                   ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'To',
+                      hintText: 'Your destination',
+                      prefixIcon: const Icon(Icons.flight_land),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Date',
+                      hintText: 'When do you want to travel?',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    readOnly: true,
+                    onTap: () async {
+                      await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now().add(
+                          const Duration(days: 1),
+                        ),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      // Handle date selection
+                    },
+                  ),
+                  SizedBox(height: 16.h),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Budget',
+                      hintText: 'Your budget in ₹',
+                      prefixIcon: const Icon(Icons.account_balance_wallet),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // Navigate to results screen
+                  context.go('/results');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
                 ),
-                keyboardType: TextInputType.number,
+                child: const Text('Plan Now'),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // Navigate to results screen
-              context.go('/results');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-            ),
-            child: const Text('Plan Now'),
-          ),
-        ],
-      ),
     );
   }
-  
+
   Widget _buildPlaceCard(Destination place) {
     return GestureDetector(
       onTap: () => context.go('/detail/${place.id}'),
@@ -711,7 +713,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),
-              
+
               // Gradient overlay
               Container(
                 decoration: BoxDecoration(
@@ -725,7 +727,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
               ),
-              
+
               // Content
               Padding(
                 padding: EdgeInsets.all(12.w),
@@ -745,7 +747,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(height: 4.h),
-                    
+
                     // Location
                     Row(
                       children: [
@@ -769,7 +771,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
                     SizedBox(height: 4.h),
-                    
+
                     // Rating
                     Row(
                       children: [
@@ -793,7 +795,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-  
+
   Widget _buildFeaturedTourCard(Destination tour) {
     return GestureDetector(
       onTap: () => context.go('/detail/${tour.id}'),

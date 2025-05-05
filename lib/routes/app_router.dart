@@ -12,9 +12,13 @@ import 'package:karnova/screens/bookings_screen.dart';
 import 'package:karnova/screens/home_screen_modern.dart';
 import 'package:karnova/screens/home_screen_new_design.dart';
 import 'package:karnova/screens/home_screen_optimized.dart';
+import 'package:karnova/screens/home_screen_revamped.dart';
 import 'package:karnova/screens/itinerary_screen_animated.dart';
 import 'package:karnova/screens/profile_screen_redesign.dart';
 import 'package:karnova/screens/results_screen.dart';
+import 'package:karnova/screens/search_form_screen.dart';
+import 'package:karnova/screens/search_results_screen.dart';
+import 'package:karnova/screens/ticket_view_screen.dart';
 import 'package:karnova/screens/tips_screen.dart';
 import 'package:karnova/screens/trip_confirmation_screen.dart';
 
@@ -71,6 +75,19 @@ final appRouter = GoRouter(
           ),
     ),
 
+    // Revamped home screen route (accessible via /revamped-home)
+    GoRoute(
+      path: '/revamped-home',
+      name: 'revamped-home',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
+            child: const HomeScreenRevamped(),
+            rightToLeft: true,
+          ),
+    ),
+
     // Modern home screen route (accessible via /modern-home)
     GoRoute(
       path: '/modern-home',
@@ -123,7 +140,22 @@ final appRouter = GoRouter(
           ),
     ),
 
-    // Results screen route
+    // Search form screen route
+    GoRoute(
+      path: '/search',
+      name: 'search',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
+            child: SearchFormScreen(
+              initialData: state.extra as Map<String, dynamic>?,
+            ),
+            rightToLeft: true,
+          ),
+    ),
+
+    // Search results screen route
     GoRoute(
       path: '/results',
       name: 'results',
@@ -131,7 +163,37 @@ final appRouter = GoRouter(
           (context, state) => CustomPageTransitions.slideTransition(
             context: context,
             state: state,
+            child: SearchResultsScreen(
+              searchData: state.extra as Map<String, dynamic>?,
+            ),
+            rightToLeft: true,
+          ),
+    ),
+
+    // Old results screen route
+    GoRoute(
+      path: '/old-results',
+      name: 'old-results',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
             child: const ResultsScreen(),
+            rightToLeft: true,
+          ),
+    ),
+
+    // Ticket view screen route
+    GoRoute(
+      path: '/ticket',
+      name: 'ticket',
+      pageBuilder:
+          (context, state) => CustomPageTransitions.slideTransition(
+            context: context,
+            state: state,
+            child: TicketViewScreen(
+              ticketData: state.extra as Map<String, dynamic>?,
+            ),
             rightToLeft: true,
           ),
     ),

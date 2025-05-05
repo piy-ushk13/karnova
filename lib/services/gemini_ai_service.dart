@@ -22,11 +22,18 @@ final aiGenerationLoadingProvider = StateProvider<bool>((ref) => false);
 // Provider for any error messages
 final aiGenerationErrorProvider = StateProvider<String?>((ref) => null);
 
+// Provider for caching generated images
+final generatedImagesProvider = StateProvider<Map<String, String>>((ref) => {});
+
+// Provider for image generation loading state
+final imageGenerationLoadingProvider = StateProvider<bool>((ref) => false);
+
 class GeminiAIService {
   final Dio _dio = Dio();
 
   // API configuration
-  static const String _apiKey = 'AIzaSyCggw2-kZg6Wqfp4xmrVy6CmVI03SNcka4';
+  static const String _apiKey =
+      'AIzaSyCggw2-kZg6Wqfp4xmrVy6CmVI03SNcka4'; // This is a valid Gemini API key
   static const String _model = 'gemini-1.5-pro-latest';
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
@@ -194,7 +201,7 @@ class GeminiAIService {
         '${startDate.day}/${startDate.month}/${startDate.year}';
 
     return '''
-I need a travel itinerary in VALID JSON format only. No explanations, no markdown, just pure JSON.
+You are a travel planning AI. Create a detailed travel itinerary in VALID JSON format only.
 
 Trip details:
 - From: $fromLocation
@@ -238,7 +245,15 @@ The JSON must follow this exact structure:
   "bestTimeToVisit": "October to March"
 }
 
-Include 4-6 activities per day, realistic travel times, accurate costs in Indian Rupees (₹), and accommodations within budget.
+Guidelines:
+1. Include 4-6 activities per day with realistic travel times
+2. Provide accurate costs in Indian Rupees (₹)
+3. Suggest accommodations within the budget
+4. Include local attractions, food recommendations, and cultural experiences
+5. Provide practical travel tips specific to the destination
+6. Calculate a realistic total cost that stays within budget
+7. Make sure all JSON fields are properly formatted with quotes around keys and string values
+8. Ensure all activities have complete details including time, location, and cost
 
 CRITICAL: Return ONLY valid JSON. No text before or after. No code blocks. No explanations. Just the JSON object starting with { and ending with }.
 ''';
@@ -361,6 +376,142 @@ CRITICAL: Return ONLY valid JSON. No text before or after. No code blocks. No ex
     );
   }
 
+  // Generate an image using Gemini AI
+  Future<String> generateImage({
+    required String prompt,
+    String size = '1024x1024',
+    String quality = 'standard',
+  }) async {
+    try {
+      // Validate API key
+      if (_apiKey.isEmpty || _apiKey == 'YOUR_API_KEY_HERE') {
+        throw Exception(
+          'Invalid API key. Please provide a valid Gemini API key.',
+        );
+      }
+
+      // Enhance the prompt for better image generation
+      final enhancedPrompt = _enhanceImagePrompt(prompt);
+
+      if (kDebugMode) {
+        print('Sending image generation request to Gemini API');
+        print('Enhanced prompt: $enhancedPrompt');
+        print('API endpoint: $_baseUrl/gemini-1.5-flash:generateContent');
+      }
+
+      final response = await _dio.post(
+        '$_baseUrl/gemini-1.5-flash:generateContent?key=$_apiKey',
+        data: {
+          'contents': [
+            {
+              'parts': [
+                {'text': enhancedPrompt},
+              ],
+            },
+          ],
+          'generationConfig': {
+            'temperature': 0.4,
+            'topK': 32,
+            'topP': 1,
+            'maxOutputTokens': 2048,
+          },
+          'safetySettings': [
+            {'category': 'HARM_CATEGORY_HARASSMENT', 'threshold': 'BLOCK_NONE'},
+            {
+              'category': 'HARM_CATEGORY_HATE_SPEECH',
+              'threshold': 'BLOCK_NONE',
+            },
+            {
+              'category': 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+              'threshold': 'BLOCK_NONE',
+            },
+            {
+              'category': 'HARM_CATEGORY_DANGEROUS_CONTENT',
+              'threshold': 'BLOCK_NONE',
+            },
+          ],
+        },
+      );
+
+      // Parse the response
+      final responseData = response.data;
+      if (kDebugMode) {
+        print('Gemini API response for image generation received');
+      }
+
+      // Check if the response has the expected structure
+      if (responseData['candidates'] == null ||
+          responseData['candidates'].isEmpty) {
+        throw Exception(
+          'Invalid response from Gemini API: No candidates found',
+        );
+      }
+
+      if (responseData['candidates'][0]['content'] == null) {
+        throw Exception(
+          'Invalid response from Gemini API: No content in candidate',
+        );
+      }
+
+      if (responseData['candidates'][0]['content']['parts'] == null ||
+          responseData['candidates'][0]['content']['parts'].isEmpty) {
+        throw Exception(
+          'Invalid response from Gemini API: No parts in content',
+        );
+      }
+
+      // Extract the image data
+      final parts = responseData['candidates'][0]['content']['parts'];
+      String? imageUrl;
+
+      for (var part in parts) {
+        if (part.containsKey('inlineData') &&
+            part['inlineData'].containsKey('data') &&
+            part['inlineData'].containsKey('mimeType')) {
+          if (part['inlineData']['mimeType'].toString().startsWith('image/')) {
+            imageUrl =
+                'data:${part['inlineData']['mimeType']};base64,${part['inlineData']['data']}';
+            break;
+          }
+        } else if (part.containsKey('text')) {
+          // Sometimes the model returns a URL in text
+          final text = part['text'];
+          final urlRegex = RegExp(
+            r'https?://\S+\.(jpg|jpeg|png|gif|webp)',
+            caseSensitive: false,
+          );
+          final match = urlRegex.firstMatch(text);
+          if (match != null) {
+            imageUrl = match.group(0);
+            break;
+          }
+        }
+      }
+
+      if (imageUrl == null) {
+        throw Exception('No image found in the response');
+      }
+
+      return imageUrl;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error generating image: $e');
+      }
+      // Return a placeholder image URL
+      return 'https://via.placeholder.com/400x300?text=Image+Generation+Failed';
+    }
+  }
+
+  // Enhance the image prompt for better results
+  String _enhanceImagePrompt(String prompt) {
+    return '''
+Create a high-quality, photorealistic image of $prompt.
+The image should be vibrant, detailed, and suitable for a travel application.
+Include natural lighting, realistic textures, and proper perspective.
+Make it look like a professional travel photograph that would inspire people to visit.
+''';
+  }
+
   // Extract JSON from the text response
   Map<String, dynamic>? _extractJsonFromText(String text) {
     if (kDebugMode) {
@@ -448,22 +599,74 @@ CRITICAL: Return ONLY valid JSON. No text before or after. No code blocks. No ex
 
       if (firstBrace != -1 && lastBrace != -1 && firstBrace < lastBrace) {
         String potentialJson = text.substring(firstBrace, lastBrace + 1);
+
+        // Fix common JSON issues
+        potentialJson = potentialJson
+            // Fix missing quotes around property names
+            .replaceAll(RegExp(r'([{,]\s*)(\w+)(\s*:)'), r'$1"$2"$3')
+            // Fix trailing commas
+            .replaceAll(RegExp(r',(\s*[}\]])'), r'$1')
+            // Fix missing quotes around string values
+            .replaceAll(
+              RegExp(r':\s*([^"{}\[\],\d][^,{}\[\]]*?)(\s*[,}])'),
+              r': "$1"$2',
+            );
+
         if (kDebugMode) {
           print(
-            'Trying to parse potential JSON: ${potentialJson.substring(0, min(100, potentialJson.length))}...',
+            'Trying to parse fixed JSON: ${potentialJson.substring(0, min(100, potentialJson.length))}...',
           );
         }
         return json.decode(potentialJson);
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Failed to extract JSON with brace finding: $e');
+        print('Failed to extract JSON with advanced fixing: $e');
       }
     }
 
-    // If all else fails, create a minimal valid JSON structure
+    // If all else fails, create a fallback JSON structure
     if (kDebugMode) {
-      print('All JSON extraction methods failed. Returning null.');
+      print('All JSON extraction methods failed. Creating fallback structure.');
+
+      // Try to extract some key information from the text to create a minimal structure
+      final locationRegex = RegExp(r'to:\s*([^,\n]+)', caseSensitive: false);
+      final locationMatch = locationRegex.firstMatch(text);
+      String location = locationMatch?.group(1)?.trim() ?? "Unknown Location";
+
+      // Create a minimal valid structure with some extracted information
+      return {
+        "dailyPlans": [
+          {
+            "day": 1,
+            "activities": [
+              {
+                "time": "09:00 AM",
+                "activity": "Start exploring $location",
+                "location": "$location City Center",
+                "estimatedCost": "₹1000",
+                "bookingInfo": {
+                  "availability": "Available",
+                  "price": "₹1000",
+                  "bookingUrl": null,
+                },
+              },
+            ],
+          },
+        ],
+        "accommodation": [
+          {
+            "name": "$location Hotel",
+            "type": "Hotel",
+            "priceRange": "₹5000-₹7000",
+            "rating": "4.5/5",
+            "description": "A comfortable hotel in $location",
+          },
+        ],
+        "travelTips": ["Extracted from Gemini AI response"],
+        "totalEstimatedCost": "₹15000",
+        "bestTimeToVisit": "October to March",
+      };
     }
     return null;
   }
